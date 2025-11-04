@@ -1,20 +1,15 @@
 """
 Storage module for SpendSense
-Database models and connection management
+Handles database connections and schema definitions
 """
-from .database import engine, SessionLocal, get_db, init_db
-from .models import Base, User, Account, Transaction, Liability, Consent
+
+from .database import get_db_connection, initialize_database, get_db_path
+from .schemas import create_tables
 
 __all__ = [
-    'engine',
-    'SessionLocal',
-    'get_db',
-    'init_db',
-    'Base',
-    'User',
-    'Account',
-    'Transaction',
-    'Liability',
-    'Consent',
+    'get_db_connection',
+    'initialize_database',
+    'get_db_path',
+    'create_tables'
 ]
 

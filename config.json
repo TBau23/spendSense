@@ -1,0 +1,30 @@
+{
+  "data_generation": {
+    "user_count": 75,
+    "consent_ratio": 0.9,
+    "seed": 42,
+    "date_range_months": 7,
+    "archetypes": {
+      "high_utilizer": 18,
+      "variable_income": 12,
+      "subscription_heavy": 12,
+      "savings_builder": 12,
+      "cash_flow_stressed": 10,
+      "high_util_cash_stressed": 4,
+      "variable_income_subscriptions": 4,
+      "stable_finances": 6,
+      "edge_high_util_threshold": 2,
+      "edge_subscription_threshold": 2,
+      "edge_cash_flow_threshold": 2,
+      "edge_no_transactions": 1,
+      "edge_no_credit": 1
+    }
+  },
+  "database": {
+    "path": "data/spendsense.db"
+  },
+  "output": {
+    "validation_report_path": "data/validation_report.json"
+  }
+}
+
