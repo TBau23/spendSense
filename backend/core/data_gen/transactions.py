@@ -258,6 +258,14 @@ def generate_user_transactions(
     # Calculate monthly rent/mortgage
     monthly_rent = avg_income * 0.30  # 30% of income
     
+    # Calculate monthly expense target based on archetype
+    if archetype.target_low_balance_days_pct > 0.25:  # Cash flow stressed
+        monthly_expense_target = avg_income * 0.95  # Spend almost everything
+    elif archetype.savings_behavior in ["aggressive", "consistent"]:  # Savings builder
+        monthly_expense_target = avg_income * 0.60  # Save 40%
+    else:  # Normal/stable
+        monthly_expense_target = avg_income * 0.75  # Save 25%
+    
     # Track balance day-by-day for Cash Flow Stressed validation
     daily_balances = []
     current_balance = archetype.starting_checking_balance
@@ -266,6 +274,8 @@ def generate_user_transactions(
     current_date = start_date
     payroll_index = 0
     subscription_day_of_month = random.randint(1, 28)
+    rent_due_day = random.randint(1, 5)  # Rent due in first 5 days of month
+    last_rent_month = None  # Track last month rent was paid
     
     while current_date <= end_date:
         # Check if it's a payroll date
@@ -276,18 +286,17 @@ def generate_user_transactions(
             current_balance += payroll_amount
             transaction_count += 1
             payroll_index += 1
-            
-            # Pay rent/mortgage a few days after payroll
-            if random.random() < 0.5:  # 50% chance to pay rent right after payroll
-                rent_date = current_date + timedelta(days=random.randint(1, 3))
-                if rent_date <= end_date:
-                    generate_expense_transaction(
-                        checking_id, user_id, rent_date,
-                        "Rent Payment", monthly_rent,
-                        "LOAN_PAYMENTS", "Rent", conn
-                    )
-                    current_balance -= monthly_rent
-                    transaction_count += 1
+        
+        # Pay rent/mortgage on due day each month (mandatory!)
+        if current_date.day == rent_due_day and last_rent_month != current_date.month:
+            generate_expense_transaction(
+                checking_id, user_id, current_date,
+                "Rent Payment", monthly_rent,
+                "LOAN_PAYMENTS", "Rent", conn
+            )
+            current_balance -= monthly_rent
+            transaction_count += 1
+            last_rent_month = current_date.month
         
         # Subscriptions (monthly on specific day)
         if current_date.day == subscription_day_of_month:
@@ -300,7 +309,7 @@ def generate_user_transactions(
                 transaction_count += 1
         
         # Regular expenses (groceries, dining, gas, etc.) - random days
-        if random.random() < 0.3:  # 30% chance of expense each day
+        if random.random() < 0.6:  # 60% chance of expense each day (increased from 30%)
             merchant_data = random.choice([m for m in EXPENSE_MERCHANTS if m[0] not in ["Rent Payment", "Electric Company", "Internet Provider", "Water Utility"]])
             merchant, amount_range, category_primary, category_detailed = merchant_data
             
@@ -357,18 +366,40 @@ def generate_user_transactions(
                 generate_transfer_transaction(savings_id, user_id, current_date, transfer_amount, True, conn)
                 transaction_count += 1
         
-        # For Cash Flow Stressed, ensure frequent low balance days
-        if archetype.target_low_balance_days_pct > 0.25 and current_balance > 100:
-            # Add extra expenses to drive balance down
-            if random.random() < 0.2:  # 20% chance
-                amount = random.uniform(20, 80)
-                merchant = random.choice(["Coffee Shop", "Fast Food", "Local Restaurant"])
+        # Aggressive balance management for Cash Flow Stressed users
+        if archetype.target_low_balance_days_pct > 0.25:
+            # If balance is too high, inject expenses to bring it down
+            if current_balance > 1000:
+                # Large emergency expense (car repair, medical bill, etc.)
+                amount = random.uniform(400, 800)
+                merchant = random.choice(["Auto Repair", "Medical Bill", "Emergency Expense"])
                 generate_expense_transaction(
                     checking_id, user_id, current_date,
-                    merchant, amount, "FOOD_AND_DRINK", "Restaurants", conn
+                    merchant, amount, "GENERAL_SERVICES", "Other", conn
                 )
                 current_balance -= amount
                 transaction_count += 1
+            elif current_balance > 500:
+                # Medium expense
+                amount = random.uniform(100, 300)
+                merchant = random.choice(["Car Maintenance", "Home Repair", "Healthcare"])
+                generate_expense_transaction(
+                    checking_id, user_id, current_date,
+                    merchant, amount, "GENERAL_SERVICES", "Other", conn
+                )
+                current_balance -= amount
+                transaction_count += 1
+            elif current_balance > 100:
+                # Small extra expenses
+                if random.random() < 0.3:  # 30% chance
+                    amount = random.uniform(20, 80)
+                    merchant = random.choice(["Coffee Shop", "Fast Food", "Local Restaurant"])
+                    generate_expense_transaction(
+                        checking_id, user_id, current_date,
+                        merchant, amount, "FOOD_AND_DRINK", "Restaurants", conn
+                    )
+                    current_balance -= amount
+                    transaction_count += 1
         
         # Track daily balance
         daily_balances.append(current_balance)

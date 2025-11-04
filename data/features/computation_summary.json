@@ -1,0 +1,17 @@
+{
+  "computation_date": "2025-11-04T16:35:17.884676",
+  "as_of_date": "2025-11-04",
+  "user_count": 75,
+  "windows": [
+    30,
+    180
+  ],
+  "features_computed": {
+    "subscriptions": 150,
+    "savings": 150,
+    "credit": 150,
+    "income": 150,
+    "cash_flow": 150
+  },
+  "output_directory": "data/features"
+}

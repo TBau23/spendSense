@@ -25,6 +25,14 @@
   },
   "output": {
     "validation_report_path": "data/validation_report.json"
+  },
+  "features": {
+    "output_dir": "data/features",
+    "windows": [30, 180],
+    "as_of_date": null,
+    "subscription_gap_tolerance_days": 2,
+    "subscription_cadence_threshold": 0.7,
+    "low_balance_threshold": 100.0
   }
 }
 

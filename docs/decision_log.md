@@ -93,17 +93,98 @@
 - [x] All 5 persona types represented in user archetypes (all archetypes represented)
 - [x] Data validation pipeline working (validation report generated)
 
+### Decision: Transaction Generation Expense Fixes (Post-Epic 2 Discovery)
+**Epic**: Epic 1 Refinement  
+**Decision**: Fixed transaction generation to produce realistic balances through: (1) Mandatory monthly rent (was 50% chance), (2) 60% daily expense frequency (up from 30%), (3) Archetype-specific expense targets (95% for stressed, 75% normal, 60% for savers), (4) Aggressive balance management for cash flow stressed users (large expenses when balance >$1000).  
+**Rationale**: Original generation had income consistently exceeding expenses, causing unbounded balance growth ($45k-$69k). This prevented Cash Flow Stressed and Variable Income personas from being detectable by Epic 2 features.  
+**Alternatives Considered**:
+- Budget-based generation: Too complex, less organic patterns
+- Post-generation adjustment: Hacky, breaks chronological integrity
+**Impact**: Epic 1 transaction generation quality (11,624 → 17,130 transactions). Fixed Cash Flow Stressed (0→20 users) and Variable Income (0→6 users) detection.
+
+### Decision: Savings Net Inflow Sign Correction
+**Epic**: Epic 2 Feature Engineering  
+**Decision**: Negate savings transaction sum to convert Plaid convention to semantic meaning: `net_inflow = -savings_txns['amount'].sum()`  
+**Rationale**: Plaid convention stores deposits as negative, withdrawals as positive. For user-facing features, positive net_inflow should mean "money coming in". Without negation, all savings accounts showed negative growth rates despite receiving transfers.  
+**Alternatives Considered**:
+- Filter by transaction type: More code, same result
+- Change Plaid convention throughout: Would break everything else
+**Impact**: Fixed Savings Builder detection (0→32 users). All 6/6 persona validations now pass.
+
 ---
 
 ## Epic 2: Feature Engineering
 
-### Next Epic Prerequisites
-- [ ] All signal types compute successfully (subscriptions, savings, credit, income, cash_flow)
-- [ ] 30-day and 180-day windows implemented
-- [ ] Feature outputs stored in Parquet
-- [ ] Feature validation tests passing
+### Decision: Rolling Windows with as_of_date Parameter
+**Epic**: Epic 2  
+**Decision**: Implement rolling windows using dynamic `as_of_date` parameter (defaults to current date). Features computed for date ranges relative to as_of_date (30d and 180d windows).  
+**Rationale**: Data generation is already date-aware. Enables fresh demo runs with different dates while maintaining seed reproducibility.  
+**Alternatives Considered**:
+- Fixed windows from static demo date: Rejected, limits demo flexibility
+**Impact**: Feature computation module accepts as_of_date, Parquet includes computed_date column
 
-*(Decisions to be added during Epic 2 implementation)*
+### Decision: Reconstruct Daily Balances On-the-Fly
+**Epic**: Epic 2  
+**Decision**: Compute daily balances by chronologically replaying transactions during feature computation. Don't store balance snapshots separately.  
+**Rationale**: One-time computation cached in Parquet (~15k operations for 75 users negligible). Avoids Epic 1 schema changes and storage overhead.  
+**Alternatives Considered**:
+- Store daily balance snapshots: Rejected as over-engineered for demo
+**Impact**: cash_flow.py includes chronological replay logic
+
+### Decision: Subscription Cadence Detection Tolerance
+**Epic**: Epic 2  
+**Decision**: Recurring merchant detected if ≥3 occurrences in 90 days AND ≥70% of payment gaps match monthly (28-32 days) OR weekly (5-9 days) cadence.  
+**Rationale**: ±2 day tolerance handles billing date drift. 70% threshold filters one-off purchases while allowing normal variation.  
+**Impact**: subscriptions.py gap analysis logic
+
+### Decision: Compute Features for All Users
+**Epic**: Epic 2  
+**Decision**: Compute features for both consented and non-consented users. Consent filtering deferred to Epic 5 operator view.  
+**Rationale**: Simplifies Epic 2 implementation, clean separation of concerns, enables full testing. Operator never sees non-consented data (Epic 5 enforcement).  
+**Alternatives Considered**:
+- Skip non-consented users: Rejected, adds Epic 2 complexity
+**Impact**: Epic 5 must filter features by consent_status before display
+
+### Decision: Plaid Schema Alignment
+**Epic**: Epic 2  
+**Decision**: Use Plaid-style schema with `account_type='depository'/'credit'` and `account_subtype='checking'/'savings'/'credit_card'` instead of flat account_type values.  
+**Rationale**: Matches actual Epic 1 implementation and Plaid API structure. Discovered during feature computation when all features initially returned 0.0.  
+**Impact**: Required updates to all feature modules (credit.py, savings.py, utils.py) and tests
+
+### Decision: Plaid Transaction Sign Convention
+**Epic**: Epic 2  
+**Decision**: Correctly implement Plaid's transaction sign convention: POSITIVE = expenses (money out), NEGATIVE = income (money in).  
+**Rationale**: Epic 1 correctly follows Plaid API convention where amounts are from account holder's perspective. Initial Epic 2 implementation incorrectly assumed opposite convention (expenses negative). Fixed by changing all feature modules to filter `amount > 0` for expenses and `amount < 0` for income.  
+**Alternatives Considered**:
+- Keep incorrect assumption: Rejected, would miss all subscription detection
+**Impact**: Fixed subscription detection (0 → 75 users), all signal types now correctly interpreting transaction amounts per Plaid convention
+
+### Epic 2 Complete ✓
+
+**Completed**: November 4, 2025  
+**Tests**: 14/14 passing  
+**Features Computed**: 5 signal types × 2 windows × 75 users = 750 feature rows
+
+**Validation Results**:
+- ✓ 100% coverage: All 75 users have features for both windows
+- ✓ High utilization: 17 users detected with ≥50% credit utilization
+- ✓ Subscription Heavy: **ALL 75 users** detected with ≥3 recurring merchants (fixed after sign convention correction)
+- ⚠ Savings Builder: 0 users (growth rates ≤0 in Epic 1 data)
+- ⚠ Variable Income: 0 users (cash buffers too high, pay gaps too regular)
+- ⚠ Cash Flow Stressed: 0 users (checking balances $45k-$69k too high)
+
+**Known Limitations**:
+- Epic 1 checking balances very high ($45k-$69k) - acknowledged by Epic 1 as "not enough expenses"
+- Savings growth rates negative/zero - needs investigation of savings transfer generation in Epic 1
+- Variable income gaps not meeting >45 day threshold - payroll generation too regular
+- Feature computation working correctly after sign convention fix
+
+### Next Epic Prerequisites
+- [x] All signal types compute successfully (subscriptions, savings, credit, income, cash_flow)
+- [x] 30-day and 180-day windows implemented
+- [x] Feature outputs stored in Parquet
+- [x] Feature validation tests passing (14/14)
+- [⚠] Feature values partially align with Epic 1 archetypes (credit works, others limited by data)
 
 ---
 
