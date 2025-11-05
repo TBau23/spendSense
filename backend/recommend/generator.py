@@ -23,6 +23,7 @@ from .prompts import (
     build_cross_window_context
 )
 from .storage import insert_recommendation
+from .traces import generate_and_store_traces
 
 
 def load_config(config_path: str = 'config.json') -> Dict[str, Any]:
@@ -199,6 +200,20 @@ def generate_recommendation(
         print(f"   ✓ Stored recommendation {recommendation['recommendation_id']}")
     except Exception as e:
         print(f"   ⚠ Storage failed: {e}")
+    
+    # 9. Generate and store decision traces
+    print("\n9. Generating decision traces...")
+    try:
+        trace_ids = generate_and_store_traces(
+            user_id=user_id,
+            recommendation=recommendation,
+            educational_items=educational_items,
+            partner_offers=partner_offers,
+            db_path=db_path
+        )
+        print(f"   ✓ Stored {len(trace_ids)} decision traces")
+    except Exception as e:
+        print(f"   ⚠ Trace generation failed: {e}")
     
     print(f"\n{'='*70}")
     print(f"✓ Recommendation generated in {generation_time:.2f}s")

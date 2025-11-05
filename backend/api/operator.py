@@ -116,19 +116,32 @@ async def get_user_recs(user_id: str):
     """
     Get all recommendations for a specific user (all statuses)
     
+    Returns full recommendations with all items (educational, actionable, partner offers)
+    
     Returns 403 if user has not consented
     """
     try:
         # Check consent
         check_consent(user_id, DB_PATH)
         
-        # Get recommendations
+        # Get recommendations (parent records only)
         recommendations = get_user_recommendations(user_id, DB_PATH)
+        
+        # Fetch full details with items for each recommendation
+        full_recommendations = []
+        for rec in recommendations:
+            try:
+                full_rec = get_recommendation_with_items(rec['recommendation_id'], DB_PATH)
+                full_recommendations.append(full_rec)
+            except Exception as e:
+                # If fetching items fails, include the parent record anyway
+                print(f"Warning: Could not fetch items for {rec['recommendation_id']}: {e}")
+                full_recommendations.append(rec)
         
         return {
             "user_id": user_id,
-            "recommendations": recommendations,
-            "count": len(recommendations)
+            "recommendations": full_recommendations,
+            "count": len(full_recommendations)
         }
         
     except ConsentError:
