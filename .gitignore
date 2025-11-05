@@ -1,6 +1,7 @@
 # Python
 backend/venv/
 backend/__pycache__/
+backend/tests/__pycache__/
 *.pyc
 *.pyo
 *.pyd
@@ -8,6 +9,10 @@ backend/__pycache__/
 *.so
 *.egg
 *.egg-info/
+scripts/debug_*.py
+.pytest_cache/
+data/features/test/
+
 
 # React
 frontend/node_modules/

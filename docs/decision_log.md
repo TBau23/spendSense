@@ -225,6 +225,85 @@
 
 ---
 
+## Epic 3: Persona System
+
+### Decision: Dual Time Window Persona Assignments
+**Epic**: Epic 3 (Persona System)  
+**Decision**: Assign personas separately for 30-day and 180-day windows. Same user can have different primary personas across windows.  
+**Rationale**: Recent behavior (30d) may differ from long-term patterns (180d). Provides richer behavioral view and enables dynamic persona detection.  
+**Alternatives Considered**:
+- Single window only (30d): Rejected as insufficient to detect long-term trends
+- Combined scoring across windows: Rejected as overly complex for demo
+**Impact**: Assignment logic, database schema (user × 2 windows = 150 assignments for 75 users), Epic 4 recommendation strategy
+
+### Decision: Severity-Based Tie-Breaking
+**Epic**: Epic 3 (Persona System)  
+**Decision**: When multiple personas have same priority level, use quantitative severity scores for tie-breaking. Severity calculated as: P1=max_utilization, P2=median_pay_gap/45, P3=subscription_share, P4=growth_rate, P5=pct_days_below_100.  
+**Rationale**: More nuanced than arbitrary precedence ordering. Reflects actual financial situation severity.  
+**Alternatives Considered**:
+- Fixed precedence within priority levels: Rejected as too rigid (e.g., P2 vs P5 both HIGH - which is worse?)
+- Combined risk scores: Rejected as overly complex
+**Impact**: Prioritization logic, assignment outcomes where multiple personas match at same priority
+
+### Decision: Unassigned/STABLE Status for Non-Matching Users
+**Epic**: Epic 3 (Persona System)  
+**Decision**: Create 6th state "STABLE" for users matching no personas, rather than forcing assignment to lowest severity persona.  
+**Rationale**: Honest representation of healthy financial behavior. Demonstrates system doesn't force categorization. Valuable for demo to show different user states.  
+**Alternatives Considered**:
+- Auto-assign to Persona 4 (Savings Builder): Rejected as dishonest if criteria not met
+- Null/unassigned state with no label: Rejected as less clear for operator view
+**Impact**: Assignment logic, Epic 4 (STABLE users can receive generic educational content or nothing), operator view design
+
+### Decision: No Credit Cards Auto-Pass for Persona 4 Utilization Check
+**Epic**: Epic 3 (Persona System)  
+**Decision**: Users with no credit cards (max_utilization = NULL) automatically satisfy the "all cards <30% utilization" requirement for Persona 4 (Savings Builder).  
+**Rationale**: No credit cards means no utilization issues. Allows savings-focused users without credit to qualify for Persona 4.  
+**Alternatives Considered**:
+- Require at least one credit card: Rejected as excludes valid user segment
+- Separate persona for no-credit users: Rejected as over-complicating
+**Impact**: Persona 4 evaluation logic, affects users without credit accounts
+
+### Decision: Date Type Handling in Feature Loading
+**Epic**: Epic 3 (Persona System)  
+**Decision**: Convert string as_of_date to datetime.date object before Parquet comparison, as Parquet stores dates as datetime.date objects.  
+**Rationale**: Fixes type mismatch bug discovered during implementation. Ensures features load correctly.  
+**Alternatives Considered**:
+- Store as_of_date as string in Parquet: Rejected as Parquet date type is more efficient
+- Parse dates during feature computation: Rejected as pushes complexity upstream
+**Impact**: Feature loading logic in assign.py, critical for persona assignment to work
+
+### Decision: Prioritization Results - Savings Builder as Secondary Only
+**Epic**: Epic 3 (Persona System)  
+**Decision**: Accept that Persona 4 (Savings Builder) may have 0 primary assignments if all qualifying users have higher-priority issues (CRITICAL, HIGH, or MEDIUM personas).  
+**Rationale**: This is correct prioritization behavior - users saving money but also carrying 65% credit utilization SHOULD focus on debt first (Persona 1 CRITICAL). Persona 4 appears as secondary persona (32 times in validation), confirming dual-tracking works.  
+**Alternatives Considered**:
+- Lower thresholds for Persona 4 to force primary assignments: Rejected as defeats purpose of prioritization
+- Adjust archetype generation to create pure Persona 4 users: Deferred to future if needed
+**Impact**: Assignment distribution (69% users have secondary personas), demonstrates prioritization system working as designed, Epic 4 will need to handle secondary persona content
+
+### Decision: Both SQLite and Parquet Storage for Assignments
+**Epic**: Epic 3 (Persona System)  
+**Decision**: Store persona assignments in both SQLite (with JSON audit traces) and Parquet (without traces, for analytics).  
+**Rationale**: SQLite enables fast operational queries by user_id, supports JSON audit trails. Parquet enables analytics queries across all users. Pattern consistent with Epic 1/2 (relational + analytical storage).  
+**Alternatives Considered**:
+- SQLite only: Rejected as slow for bulk analytics
+- Parquet only: Rejected as no JSON support for audit traces
+**Impact**: Storage module, dual write operations (minimal overhead for 75 users), Epic 5 operator view can use SQLite for traces, Epic 6 analytics can use Parquet
+
+---
+
+## Epic 4: Recommendation Engine
+
+*(Decisions to be added during Epic 4 implementation)*
+
+---
+
+## Epic 5: Guardrails & Operator View
+
+*(Decisions to be added during Epic 5 implementation)*
+
+---
+
 ## Epic 6: Evaluation & Polish
 
 *(Decisions to be added during Epic 6 implementation)*
