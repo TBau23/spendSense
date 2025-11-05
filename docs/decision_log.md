@@ -294,7 +294,70 @@
 
 ## Epic 4: Recommendation Engine
 
-*(Decisions to be added during Epic 4 implementation)*
+### Decision: Hybrid Content Strategy
+**Epic**: Epic 4  
+**Decision**: Pre-approved educational content catalog + LLM-generated personalized rationales and actionable items.  
+**Rationale**: Balances personalization with consistency. Educational content is vetted once and reused (safe, consistent quality). Rationales and actionable items are LLM-generated with user-specific data (personalized, requires operator review in Epic 5). Fallback to templates when LLM fails ensures demo never crashes.  
+**Alternatives Considered**:
+- Fully LLM-generated content: Rejected due to inconsistent quality, no caching
+- Fully template-based: Rejected as insufficiently personalized, doesn't demonstrate LLM capabilities
+**Impact**: Epic 5 operator review focuses on rationales/actions (risky content), not educational items (pre-approved)
+
+### Decision: Generic Placeholder Partner Products
+**Epic**: Epic 4  
+**Decision**: Use generic placeholder products (e.g., "Generic Balance Transfer Card") instead of real financial products.  
+**Rationale**: Demo focuses on workflow and eligibility logic, not product accuracy. Avoids partnership/legal complexity. Naming makes it clear these are placeholders.  
+**Alternatives Considered**:
+- Real partner products: Rejected due to research overhead, potential legal issues, outdated information
+- No partner offers: Rejected as requirements specify offer eligibility system
+**Impact**: Eligibility rules demonstrate capability without product maintenance burden
+
+### Decision: Credit Score Estimation via Heuristics
+**Epic**: Epic 4  
+**Decision**: Estimate credit score from utilization and payment behavior using simple heuristics (base 750, penalties for high utilization, overdue payments). Documented as "demo only, not accurate".  
+**Rationale**: Enables offer eligibility checking without real credit data. Simplified algorithm is transparent and explainable. Sufficient for demo purposes.  
+**Alternatives Considered**:
+- Random scores: Rejected as unrealistic
+- FICO-like algorithms: Rejected as overly complex for demo
+- Assume all users have same score: Rejected as doesn't demonstrate eligibility filtering
+**Impact**: Partner offer eligibility checking functional; clear disclaimer prevents misuse
+
+### Decision: Cross-Window Persona Blending (60/40)
+**Epic**: Epic 4  
+**Decision**: When user has different personas across 30d and 180d windows, blend content: 60% for recent behavior (30d), 40% for long-term pattern (180d).  
+**Rationale**: Recent behavior is more urgent and actionable. Long-term patterns provide context. 60/40 split balances both perspectives while prioritizing recent issues.  
+**Alternatives Considered**:
+- Only use 30d persona: Rejected as loses valuable long-term context
+- 50/50 split: Rejected as doesn't prioritize recent urgency
+- 70/30 split: Considered, but 60/40 feels more balanced
+**Impact**: Users with evolving financial situations get holistic recommendations
+
+### Decision: LLM Mock Mode for Testing
+**Epic**: Epic 4  
+**Decision**: Implement mock mode (MOCK_LLM=true) that returns placeholder text without API calls. Fallback system ensures graceful degradation when LLM fails.  
+**Rationale**: Enables testing without API costs. Ensures demo never crashes due to LLM timeouts or errors. Supports CI/CD pipelines.  
+**Alternatives Considered**:
+- Require API key for all testing: Rejected as creates barrier to development
+- Only test with real LLM: Rejected as incurs costs and network dependency
+**Impact**: Fast iteration, no API costs during development, robust error handling
+
+### Decision: Batch Generation for Initial Demo Setup
+**Epic**: Epic 4  
+**Decision**: Primary generation mode is batch processing (all users at once). Single-user mode available for testing.  
+**Rationale**: Simplifies initial demo setup. All users get recommendations before Epic 5 operator view. Performance acceptable (~15-30 min for 75 users).  
+**Alternatives Considered**:
+- On-demand generation in Epic 5: Deferred for natural workflow implementation
+- Event-driven generation (on persona update): Deferred as requires more infrastructure
+**Impact**: Epic 5 can focus on operator review workflow with pre-generated recommendations available. **Note**: Natural generation triggers (on consent grant, persona update, operator request) should be revisited in Epic 5 for more realistic workflow.
+
+### Decision: Tests Deferred to Post-Epic 4
+**Epic**: Epic 4  
+**Decision**: Defer comprehensive test suite (Tasks 17-23) to post-Epic 4 implementation. Manual validation confirms functionality.  
+**Rationale**: Core recommendation engine functional and tested manually. Writing comprehensive tests can happen after Epic 5 clarifies integration patterns. Time better spent on operator workflow (Epic 5).  
+**Alternatives Considered**:
+- Write all tests now: Rejected as Epic 5 may inform test cases
+- No tests ever: Rejected as quality requirement
+**Impact**: Test coverage added later if needed, minimal risk given manual validation
 
 ---
 
