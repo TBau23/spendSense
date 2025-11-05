@@ -1,0 +1,163 @@
+[
+  {
+    "offer_id": "offer_bt_card_001",
+    "product_type": "balance_transfer_card",
+    "product_name": "Generic Balance Transfer Credit Card",
+    "short_description": "0% APR for 18 months on balance transfers, helping you save on interest charges while paying down debt",
+    "persona_relevance": [1],
+    "eligibility_rules": {
+      "min_estimated_credit_score": 670,
+      "max_credit_utilization": 0.85,
+      "min_credit_card_balance": 500,
+      "max_existing_cards": 6
+    },
+    "benefits": [
+      "0% APR for 18 months on balance transfers",
+      "Save on interest charges during promotional period",
+      "Consolidate multiple balances into one payment",
+      "No annual fee (first year)"
+    ],
+    "disclaimer": "This is educational content, not financial advice. Consult a licensed advisor for personalized guidance. Balance transfer fees may apply."
+  },
+  {
+    "offer_id": "offer_debt_consolidation_001",
+    "product_type": "debt_consolidation_loan",
+    "product_name": "Generic Debt Consolidation Loan",
+    "short_description": "Fixed-rate personal loan to consolidate high-interest credit card debt into one manageable monthly payment",
+    "persona_relevance": [1],
+    "eligibility_rules": {
+      "min_estimated_credit_score": 640,
+      "min_credit_card_balance": 1000,
+      "max_credit_utilization": 0.95,
+      "min_monthly_income": 2000
+    },
+    "benefits": [
+      "Fixed interest rate (no surprises)",
+      "Single monthly payment simplifies budgeting",
+      "Potentially lower APR than credit cards",
+      "Fixed payoff timeline (3-5 years typical)"
+    ],
+    "disclaimer": "This is educational content, not financial advice. Consult a licensed advisor for personalized guidance. Loan terms vary by creditworthiness."
+  },
+  {
+    "offer_id": "offer_budgeting_app_001",
+    "product_type": "budgeting_app",
+    "product_name": "Generic Budgeting App",
+    "short_description": "Free budgeting app with automatic transaction categorization, spending insights, and bill tracking",
+    "persona_relevance": [2, 3],
+    "eligibility_rules": {},
+    "benefits": [
+      "Free tier available with core features",
+      "Automatic transaction categorization",
+      "Bill reminders and due date tracking",
+      "Custom budget categories",
+      "Spending insights and trends"
+    ],
+    "disclaimer": "This is educational content, not financial advice. Review app's privacy policy before connecting financial accounts."
+  },
+  {
+    "offer_id": "offer_income_smoothing_001",
+    "product_type": "income_smoothing_tool",
+    "product_name": "Generic Income Smoothing Service",
+    "short_description": "Financial tool that helps freelancers and gig workers smooth variable income into consistent monthly amounts",
+    "persona_relevance": [2],
+    "eligibility_rules": {
+      "min_monthly_income": 1500
+    },
+    "benefits": [
+      "Smooth irregular income into predictable amounts",
+      "Build income buffer automatically",
+      "Separate business and personal finances",
+      "Track income patterns over time"
+    ],
+    "disclaimer": "This is educational content, not financial advice. Service fees may apply."
+  },
+  {
+    "offer_id": "offer_subscription_mgmt_001",
+    "product_type": "subscription_management_service",
+    "product_name": "Generic Subscription Management Service",
+    "short_description": "Identifies and tracks all your subscriptions, sends cancellation reminders, and helps you negotiate better rates",
+    "persona_relevance": [3],
+    "eligibility_rules": {},
+    "benefits": [
+      "Automatic subscription detection",
+      "Renewal reminders before charges",
+      "Negotiation assistance for lower rates",
+      "Cancel unused subscriptions easily",
+      "Annual savings estimate"
+    ],
+    "disclaimer": "This is educational content, not financial advice. Service may charge percentage of savings or monthly fee."
+  },
+  {
+    "offer_id": "offer_hysa_001",
+    "product_type": "high_yield_savings_account",
+    "product_name": "Generic High-Yield Savings Account",
+    "short_description": "FDIC-insured savings account with 4.5% APY, no minimum balance, and no monthly fees",
+    "persona_relevance": [4, 2],
+    "eligibility_rules": {
+      "exclude_if_has_account_type": "high_yield_savings"
+    },
+    "benefits": [
+      "4.5% APY (10-15x higher than traditional savings)",
+      "FDIC insured up to $250,000",
+      "No minimum balance requirement",
+      "No monthly maintenance fees",
+      "Easy mobile app access"
+    ],
+    "disclaimer": "This is educational content, not financial advice. APY subject to change. FDIC insurance applies."
+  },
+  {
+    "offer_id": "offer_cd_001",
+    "product_type": "certificate_of_deposit",
+    "product_name": "Generic Certificate of Deposit",
+    "short_description": "12-month CD with 5.0% APY, ideal for funds you won't need in the near term",
+    "persona_relevance": [4],
+    "eligibility_rules": {
+      "min_savings_balance": 1000
+    },
+    "benefits": [
+      "5.0% APY guaranteed for 12 months",
+      "FDIC insured up to $250,000",
+      "Fixed rate protects against rate drops",
+      "Automatic renewal option",
+      "Minimum deposit $1,000"
+    ],
+    "disclaimer": "This is educational content, not financial advice. Early withdrawal penalties apply. FDIC insurance applies."
+  },
+  {
+    "offer_id": "offer_overdraft_protection_001",
+    "product_type": "overdraft_protection_service",
+    "product_name": "Generic Overdraft Protection Service",
+    "short_description": "Link your checking account to savings or credit to avoid costly overdraft fees",
+    "persona_relevance": [5],
+    "eligibility_rules": {
+      "min_checking_balance": 0,
+      "has_savings_account": true
+    },
+    "benefits": [
+      "Avoid $35+ overdraft fees",
+      "Automatic transfers from savings when needed",
+      "Lower transfer fees than overdraft charges",
+      "Peace of mind for tight cash flow periods",
+      "Easy online setup"
+    ],
+    "disclaimer": "This is educational content, not financial advice. Transfer fees may apply. Requires linked savings account."
+  },
+  {
+    "offer_id": "offer_low_fee_checking_001",
+    "product_type": "low_fee_checking_account",
+    "product_name": "Generic Low-Fee Checking Account",
+    "short_description": "No monthly maintenance fees, no minimum balance, and low overdraft fees designed for budget-conscious users",
+    "persona_relevance": [5, 2],
+    "eligibility_rules": {},
+    "benefits": [
+      "No monthly maintenance fees",
+      "No minimum balance requirement",
+      "Lower overdraft fees ($15 vs $35 typical)",
+      "Free debit card and mobile app",
+      "Early direct deposit access (up to 2 days early)"
+    ],
+    "disclaimer": "This is educational content, not financial advice. Overdraft fees still apply but are lower than traditional accounts."
+  }
+]
+

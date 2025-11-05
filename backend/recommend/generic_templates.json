@@ -1,0 +1,203 @@
+[
+  {
+    "template_id": "generic_persona_1",
+    "persona_id": 1,
+    "persona_name": "High Utilization",
+    "status": "PRE_APPROVED",
+    "template_content": {
+      "educational_content": [
+        "edu_credit_utilization_101",
+        "edu_debt_avalanche",
+        "edu_debt_payoff_plan",
+        "edu_minimum_payment_trap"
+      ],
+      "actionable_items": [
+        {
+          "text": "Review your credit card statements to identify which cards have the highest interest rates",
+          "rationale": "Focusing on high-interest debt first can help you save the most money on interest charges over time.",
+          "generic": true
+        },
+        {
+          "text": "Consider setting up automatic minimum payments to protect your credit score",
+          "rationale": "Automating at least your minimum payments helps ensure you never miss a due date, which is crucial for maintaining good credit.",
+          "generic": true
+        },
+        {
+          "text": "Calculate how much extra you could pay toward your highest-interest card each month",
+          "rationale": "Even small additional payments can significantly reduce the time it takes to pay off debt and the total interest you'll pay.",
+          "generic": true
+        }
+      ],
+      "partner_offers": [
+        "offer_bt_card_001",
+        "offer_debt_consolidation_001"
+      ]
+    }
+  },
+  {
+    "template_id": "generic_persona_2",
+    "persona_id": 2,
+    "persona_name": "Variable Income Budgeter",
+    "status": "PRE_APPROVED",
+    "template_content": {
+      "educational_content": [
+        "edu_variable_income_budgeting",
+        "edu_emergency_fund_irregular",
+        "edu_cash_flow_smoothing",
+        "edu_freelancer_stability"
+      ],
+      "actionable_items": [
+        {
+          "text": "Calculate your average monthly income over the past 6 months to establish a baseline budget",
+          "rationale": "Understanding your average income helps you create a sustainable spending plan that accounts for variability.",
+          "generic": true
+        },
+        {
+          "text": "Set aside a percentage of high-earning months to smooth out lower-earning periods",
+          "rationale": "Building an income buffer during good months creates consistency and reduces financial stress during lean times.",
+          "generic": true
+        },
+        {
+          "text": "List all your bills by due date and identify which can be adjusted to align with your typical pay schedule",
+          "rationale": "Strategic timing of bill payments can help you avoid cash flow crunches and maintain better control over your finances.",
+          "generic": true
+        }
+      ],
+      "partner_offers": [
+        "offer_budgeting_app_001",
+        "offer_income_smoothing_001"
+      ]
+    }
+  },
+  {
+    "template_id": "generic_persona_3",
+    "persona_id": 3,
+    "persona_name": "Subscription-Heavy",
+    "status": "PRE_APPROVED",
+    "template_content": {
+      "educational_content": [
+        "edu_subscription_audit",
+        "edu_bill_negotiation",
+        "edu_subscription_alerts",
+        "edu_annual_vs_monthly"
+      ],
+      "actionable_items": [
+        {
+          "text": "Review your bank and credit card statements from the past 3 months to identify all recurring charges",
+          "rationale": "Many people forget about subscriptions they signed up for months or years ago. A thorough audit often reveals $50-100+ in monthly savings.",
+          "generic": true
+        },
+        {
+          "text": "Set calendar reminders for 7 days before annual subscriptions renew",
+          "rationale": "Annual subscriptions can be easy to forget. Advance reminders give you time to decide if you still need the service before being charged.",
+          "generic": true
+        },
+        {
+          "text": "Choose 2-3 services that you value most and consider canceling the rest",
+          "rationale": "Prioritizing your most-used subscriptions helps you cut spending without sacrificing the services that truly add value to your life.",
+          "generic": true
+        }
+      ],
+      "partner_offers": [
+        "offer_subscription_mgmt_001",
+        "offer_budgeting_app_001"
+      ]
+    }
+  },
+  {
+    "template_id": "generic_persona_4",
+    "persona_id": 4,
+    "persona_name": "Savings Builder",
+    "status": "PRE_APPROVED",
+    "template_content": {
+      "educational_content": [
+        "edu_smart_savings_goals",
+        "edu_hysa_guide",
+        "edu_savings_automation",
+        "edu_cd_basics"
+      ],
+      "actionable_items": [
+        {
+          "text": "Review your current savings account interest rate and compare to high-yield options",
+          "rationale": "High-yield savings accounts typically offer 10-15x more interest than traditional banks, helping your emergency fund grow faster.",
+          "generic": true
+        },
+        {
+          "text": "Set up automatic transfers from checking to savings that align with your payday",
+          "rationale": "Automating your savings ensures you pay yourself first and builds wealth consistently without relying on willpower.",
+          "generic": true
+        },
+        {
+          "text": "Consider increasing your savings rate by 1-2% if you've received a raise recently",
+          "rationale": "Lifestyle inflation can eat away at raises. Directing a portion of any income increase to savings helps you build wealth faster.",
+          "generic": true
+        }
+      ],
+      "partner_offers": [
+        "offer_hysa_001",
+        "offer_cd_001"
+      ]
+    }
+  },
+  {
+    "template_id": "generic_persona_5",
+    "persona_id": 5,
+    "persona_name": "Cash Flow Stressed",
+    "status": "PRE_APPROVED",
+    "template_content": {
+      "educational_content": [
+        "edu_paycheck_to_paycheck",
+        "edu_expense_timing",
+        "edu_bare_bones_budget",
+        "edu_small_steps_buffer"
+      ],
+      "actionable_items": [
+        {
+          "text": "Try to set aside $25-50 from your next paycheck before paying bills to start building a small buffer",
+          "rationale": "Even a small buffer of $50-100 can help break the cycle of low balances and provide breathing room for unexpected expenses.",
+          "generic": true
+        },
+        {
+          "text": "Create a list of all your recurring bills and their due dates to align them with your pay schedule",
+          "rationale": "Strategic timing of bill payments can help you maintain higher average balances and avoid overdraft fees.",
+          "generic": true
+        },
+        {
+          "text": "Identify one discretionary expense you could reduce or eliminate for the next 2-3 months",
+          "rationale": "Small temporary cuts can create the initial buffer needed to break out of paycheck-to-paycheck living.",
+          "generic": true
+        }
+      ],
+      "partner_offers": [
+        "offer_overdraft_protection_001",
+        "offer_low_fee_checking_001"
+      ]
+    }
+  },
+  {
+    "template_id": "generic_stable",
+    "persona_id": 0,
+    "persona_name": "Stable",
+    "status": "PRE_APPROVED",
+    "template_content": {
+      "educational_content": [
+        "edu_financial_wellness",
+        "edu_optimize_finances"
+      ],
+      "actionable_items": [
+        {
+          "text": "Keep up the great work with your financial habits",
+          "rationale": "You're demonstrating strong financial behaviors. Maintaining these habits will continue to support your financial well-being.",
+          "generic": true
+        },
+        {
+          "text": "Consider exploring advanced optimization strategies like tax-advantaged accounts or investment diversification",
+          "rationale": "When the basics are covered, it's a good time to explore ways to maximize your financial position through optimization.",
+          "generic": true
+        }
+      ],
+      "partner_offers": []
+    }
+  }
+]
+

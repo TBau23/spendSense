@@ -61,6 +61,36 @@
         "balance_volatility_threshold": 1.0
       }
     }
+  },
+  "recommendations": {
+    "output_parquet": "data/features/recommendations.parquet",
+    "content_catalog_path": "backend/recommend/content_catalog.json",
+    "partner_offers_path": "backend/recommend/partner_offers.json",
+    "generic_templates_path": "backend/recommend/generic_templates.json",
+    "content_selection": {
+      "educational_items_min": 3,
+      "educational_items_max": 5,
+      "actionable_items_min": 1,
+      "actionable_items_max": 3,
+      "partner_offers_max": 2
+    },
+    "cross_window_strategy": {
+      "primary_weight": 0.6,
+      "secondary_weight": 0.4
+    }
+  },
+  "llm": {
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "api_key_env": "OPENAI_API_KEY",
+    "temperature": 0.7,
+    "max_tokens": 200,
+    "timeout_seconds": 10,
+    "retry_attempts": 2
+  },
+  "eligibility": {
+    "credit_score_estimation_enabled": true,
+    "strict_mode": false
   }
 }
 
