@@ -10,8 +10,38 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 import uuid
 import logging
+import sys
+import os
+
+# Add backend to path to import personas module
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from personas.metadata import get_persona_name
 
 logger = logging.getLogger(__name__)
+
+
+def _format_persona_list(persona_ids: List[int]) -> str:
+    """
+    Convert list of persona IDs to human-readable names
+    
+    Args:
+        persona_ids: List of persona IDs (e.g., [3, 1])
+        
+    Returns:
+        Comma-separated persona names (e.g., "Subscription-Heavy, High Utilization")
+    """
+    if not persona_ids:
+        return "None"
+    
+    names = []
+    for pid in persona_ids:
+        name = get_persona_name(pid)
+        if name:
+            names.append(name)
+        else:
+            names.append(f"Unknown ({pid})")
+    
+    return ", ".join(names)
 
 
 def generate_persona_trace(
@@ -90,11 +120,14 @@ def generate_content_selection_trace(
     }
     
     # Educational item selection reasons
+    target_personas = recommendation.get('target_personas', [])
+    persona_names = _format_persona_list(target_personas)
+    
     for item in educational_items:
         trace['educational_items'].append({
             'content_id': item.get('content_id'),
             'title': item.get('title'),
-            'selected_reason': f"Primary relevance to persona(s): {recommendation.get('target_personas')}",
+            'selected_reason': f"Primary relevance to persona(s): {persona_names}",
             'persona_tags': item.get('persona_tags', [])
         })
     
