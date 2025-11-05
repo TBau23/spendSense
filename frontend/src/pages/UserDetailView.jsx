@@ -82,7 +82,9 @@ const UserDetailView = () => {
 
       {/* User Header */}
       <header className="user-header">
-        <h1>User: {userId}</h1>
+        <h1>
+          {userMetrics?.full_name || 'User'} (***{userId.slice(-5)})
+        </h1>
         <button className="btn btn-secondary" onClick={loadUserData}>
           Refresh
         </button>

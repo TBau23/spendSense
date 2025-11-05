@@ -42,23 +42,42 @@ const DecisionTrace = ({ traces }) => {
     if (!trace) return <p className="no-data">Not available</p>;
 
     const content = trace.trace_content || trace;
+    
+    // Handle both old string format and new structured format
+    const rationale = content.rationale;
+    const isStructured = typeof rationale === 'object' && rationale !== null;
+    const summary = isStructured ? rationale.summary : rationale;
+    const criteriaDetails = isStructured ? rationale.criteria_details : null;
 
     return (
       <div className="trace-details">
         <p><strong>Persona:</strong> {content.primary_persona_name || 'Stable'}</p>
         <p><strong>Status:</strong> {content.status}</p>
-        <p className="rationale">{content.rationale}</p>
         
-        {content.criteria_met && Object.keys(content.criteria_met).length > 0 && (
-          <details className="trace-criteria">
-            <summary>Criteria Met</summary>
-            <pre>{JSON.stringify(content.criteria_met, null, 2)}</pre>
-          </details>
+        {summary && <p className="rationale-summary">{summary}</p>}
+        
+        {/* Display criteria details with checkmarks */}
+        {criteriaDetails && criteriaDetails.length > 0 && (
+          <div className="criteria-details">
+            <h5>Criteria Met:</h5>
+            <ul className="criteria-list">
+              {criteriaDetails.map((criterion, idx) => (
+                <li key={idx} className="criterion-item">
+                  <span className="check-icon">✓</span>
+                  <span className="criterion-text">
+                    {criterion.threshold}
+                  </span>
+                  <span className="actual-value">(Actual: {criterion.actual})</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
-
+        
+        {/* Keep collapsible feature values for reference */}
         {content.feature_values_cited && Object.keys(content.feature_values_cited).length > 0 && (
           <details className="trace-features">
-            <summary>Feature Values</summary>
+            <summary>Raw Feature Values</summary>
             <pre>{JSON.stringify(content.feature_values_cited, null, 2)}</pre>
           </details>
         )}
@@ -131,17 +150,6 @@ const DecisionTrace = ({ traces }) => {
         {expandedPersona180d && renderPersonaTrace(persona180d, 180)}
       </div>
 
-      {/* Content Selection Trace */}
-      <div className="trace-section">
-        <div 
-          className="trace-header"
-          onClick={() => setExpandedContent(!expandedContent)}
-        >
-          <h4>Why this content?</h4>
-          <span className="expand-icon">{expandedContent ? '▼' : '▶'}</span>
-        </div>
-        {expandedContent && renderContentTrace(latestContent)}
-      </div>
     </div>
   );
 };

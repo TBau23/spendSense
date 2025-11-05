@@ -44,6 +44,47 @@ def _format_persona_list(persona_ids: List[int]) -> str:
     return ", ".join(names)
 
 
+def get_threshold_for_criterion(criterion: str, criteria_values: dict = None) -> str:
+    """
+    Map criterion name to human-readable threshold description
+    
+    Args:
+        criterion: Criterion key from persona evaluation
+        criteria_values: Dictionary of criteria values with thresholds
+        
+    Returns:
+        Human-readable threshold description
+    """
+    threshold_map = {
+        # Persona 1: High Utilization
+        'max_utilization': 'Utilization ≥50%',
+        'interest_charges': 'Interest charges present',
+        'minimum_payment_only': 'Minimum payment only',
+        'is_overdue': 'Overdue payment',
+        
+        # Persona 2: Variable Income
+        'median_pay_gap_days': 'Pay gap >45 days',
+        'cash_flow_buffer_months': 'Cash flow buffer <1 month',
+        
+        # Persona 3: Subscription-Heavy
+        'recurring_merchant_count': 'Recurring merchants ≥3',
+        'monthly_recurring_spend': 'Monthly recurring spend ≥$50',
+        'subscription_share': 'Subscription share ≥10%',
+        
+        # Persona 4: Savings Builder
+        'growth_rate': 'Savings growth ≥2%',
+        'net_inflow': 'Net savings inflow ≥$200/month',
+        'net_inflow_monthly': 'Net savings inflow ≥$200/month',
+        'max_utilization_ok': 'All cards <30% utilization',
+        
+        # Persona 5: Cash Flow Stressed
+        'pct_days_below_100': 'Days below $100 ≥30%',
+        'balance_volatility': 'Balance volatility >1.0',
+    }
+    
+    return threshold_map.get(criterion, criterion.replace('_', ' ').title())
+
+
 def generate_persona_trace(
     user_id: str,
     window_days: int,
@@ -78,19 +119,80 @@ def generate_persona_trace(
     if 'assignment_trace' in persona_assignment and persona_assignment['assignment_trace']:
         try:
             assignment_trace = json.loads(persona_assignment['assignment_trace'])
-            trace['criteria_met'] = assignment_trace.get('criteria_met', {})
-            trace['feature_values_cited'] = assignment_trace.get('feature_values', {})
+            
+            # New structure: parse evaluations to extract criteria_met
+            evaluations = assignment_trace.get('evaluations', {})
+            primary_id = persona_assignment.get('primary_persona_id')
+            
+            if primary_id and f'persona_{primary_id}' in evaluations:
+                persona_eval = evaluations[f'persona_{primary_id}']
+                triggered_by = persona_eval.get('triggered_by', [])
+                criteria = persona_eval.get('criteria', {})
+                
+                # Build criteria_met dict from triggered_by
+                trace['criteria_met'] = {criterion: True for criterion in triggered_by}
+                
+                # Extract feature values from criteria
+                trace['feature_values_cited'] = criteria
+            else:
+                # Fallback to old structure if present
+                trace['criteria_met'] = assignment_trace.get('criteria_met', {})
+                trace['feature_values_cited'] = assignment_trace.get('feature_values', {})
+                
         except json.JSONDecodeError:
             logger.warning(f"Could not parse assignment_trace for user {user_id}")
     
-    # Generate human-readable rationale
+    # Generate structured rationale with criteria details
     if trace['status'] == 'STABLE':
-        trace['rationale'] = "User did not meet criteria for any persona. Financial situation appears stable."
+        trace['rationale'] = {
+            'summary': "User did not meet criteria for any persona. Financial situation appears stable.",
+            'criteria_details': []
+        }
     elif trace['primary_persona_id']:
         persona_name = trace['primary_persona_name']
-        trace['rationale'] = f"User met criteria for {persona_name} based on detected financial behaviors."
+        
+        # Build criteria details list
+        criteria_list = []
+        for criterion, met in trace['criteria_met'].items():
+            if met:  # Only include met criteria
+                threshold = get_threshold_for_criterion(criterion, trace['feature_values_cited'])
+                # Get actual value from feature_values_cited
+                actual_value = trace['feature_values_cited'].get(criterion)
+                
+                # Format actual value nicely
+                if actual_value is not None:
+                    if isinstance(actual_value, float):
+                        # Check if it's a percentage (between 0 and 1)
+                        if 0 < actual_value < 1 and criterion in ['growth_rate', 'subscription_share', 'max_utilization']:
+                            actual_str = f"{actual_value*100:.1f}%"
+                        elif criterion in ['monthly_recurring_spend', 'net_inflow_monthly']:
+                            actual_str = f"${actual_value:.2f}"
+                        else:
+                            actual_str = f"{actual_value:.1f}"
+                    elif isinstance(actual_value, (int, float)) and criterion == 'recurring_merchant_count':
+                        actual_str = f"{int(actual_value)} services"
+                    elif isinstance(actual_value, bool):
+                        actual_str = "Yes" if actual_value else "No"
+                    else:
+                        actual_str = str(actual_value)
+                else:
+                    actual_str = "Met"
+                
+                criteria_list.append({
+                    'criterion': criterion,
+                    'threshold': threshold,
+                    'actual': actual_str
+                })
+        
+        trace['rationale'] = {
+            'summary': f"Met {len(criteria_list)} criteria for {persona_name}",
+            'criteria_details': criteria_list
+        }
     else:
-        trace['rationale'] = "Persona could not be determined."
+        trace['rationale'] = {
+            'summary': "Persona could not be determined.",
+            'criteria_details': []
+        }
     
     return trace
 

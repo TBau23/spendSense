@@ -6,6 +6,7 @@
 
 import React, { useState } from 'react';
 import ApprovalActions from './ApprovalActions';
+import UserSnapshot from './UserSnapshot';
 
 const RecommendationCard = ({ recommendation, onUpdate }) => {
   const [expanded, setExpanded] = useState(false);
@@ -44,6 +45,11 @@ const RecommendationCard = ({ recommendation, onUpdate }) => {
       {/* Card Content */}
       {expanded && (
         <div className="card-content">
+          {/* User Snapshot */}
+          {recommendation.user_snapshot && (
+            <UserSnapshot snapshot={recommendation.user_snapshot} />
+          )}
+
           {/* Educational Items */}
           {recommendation.educational_items && recommendation.educational_items.length > 0 && (
             <div className="content-section">
@@ -52,9 +58,6 @@ const RecommendationCard = ({ recommendation, onUpdate }) => {
                 <div key={idx} className="content-item educational">
                   <h5>{item.content_title}</h5>
                   {item.content_snippet && <p className="snippet">{item.content_snippet}</p>}
-                  {item.rationale && (
-                    <p className="rationale"><strong>Why:</strong> {item.rationale}</p>
-                  )}
                 </div>
               ))}
             </div>

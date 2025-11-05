@@ -1,0 +1,73 @@
+.user-snapshot-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.user-snapshot-card h4 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+  opacity: 0.95;
+}
+
+.snapshot-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.snapshot-metric {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.metric-label {
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0.9;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-value {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.metric-detail {
+  font-size: 14px;
+  opacity: 0.85;
+  font-style: italic;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .user-snapshot-card {
+    padding: 16px;
+  }
+
+  .metric-value {
+    font-size: 20px;
+  }
+
+  .metric-label {
+    font-size: 12px;
+  }
+
+  .metric-detail {
+    font-size: 13px;
+  }
+}
+

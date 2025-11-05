@@ -467,6 +467,58 @@ body {
   padding: 15px;
 }
 
+.trace-details .rationale-summary {
+  margin: 10px 0;
+  font-style: italic;
+  color: #555;
+}
+
+.criteria-details {
+  margin-top: 15px;
+}
+
+.criteria-details h5 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #2c3e50;
+}
+
+.criteria-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.criterion-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  background: #f0fdf4;
+  border-left: 3px solid #22c55e;
+  border-radius: 4px;
+}
+
+.criterion-item .check-icon {
+  color: #22c55e;
+  font-weight: bold;
+  margin-right: 10px;
+  font-size: 16px;
+}
+
+.criterion-item .criterion-text {
+  flex: 1;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.criterion-item .actual-value {
+  color: #6b7280;
+  font-size: 14px;
+  margin-left: 8px;
+}
+
 .trace-details pre {
   background: #f8f9fa;
   padding: 10px;

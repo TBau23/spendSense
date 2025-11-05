@@ -25,6 +25,11 @@ from .prompts import (
 from .storage import insert_recommendation
 from .traces import generate_and_store_traces
 
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from personas.metadata import get_persona_name
+
 
 def load_config(config_path: str = 'config.json') -> Dict[str, Any]:
     """Load configuration from file."""
@@ -59,6 +64,169 @@ def load_user_features(user_id: str, db_path: str) -> Dict[str, Dict[str, Any]]:
                 features[feature_type] = user_df.iloc[0].to_dict()
     
     return features
+
+
+def generate_user_snapshot(
+    persona_context: Dict[str, Any],
+    features: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Generate 3-5 key metrics for user's financial snapshot.
+    Returns persona-specific metrics highlighting trigger behaviors.
+    
+    Args:
+        persona_context: Persona context from get_persona_context()
+        features: User features dictionary
+        
+    Returns:
+        Dictionary with metrics list
+    """
+    primary_persona_id = persona_context.get('target_personas', [None])[0]
+    
+    if not primary_persona_id:
+        return {'metrics': []}
+    
+    metrics = []
+    
+    # Persona 1: High Utilization
+    if primary_persona_id == 1:
+        credit_features = features.get('credit', {})
+        if credit_features:
+            # Find highest utilization card
+            utilization = credit_features.get('max_utilization_pct', 0)
+            total_limit = credit_features.get('total_credit_limit', 0)
+            total_balance = credit_features.get('total_credit_balance', 0)
+            interest_charges = credit_features.get('total_interest_charges_30d', 0)
+            
+            metrics.append({
+                'label': 'Credit Utilization',
+                'value': f"{utilization:.0f}%",
+                'detail': f"${total_balance:,.0f} of ${total_limit:,.0f} limit"
+            })
+            
+            if interest_charges > 0:
+                metrics.append({
+                    'label': 'Monthly Interest Charges',
+                    'value': f"${interest_charges:.2f}",
+                    'detail': None
+                })
+            
+            min_payment_only = credit_features.get('min_payment_only_flag', False)
+            if min_payment_only:
+                metrics.append({
+                    'label': 'Payment Pattern',
+                    'value': 'Minimum payments only',
+                    'detail': None
+                })
+    
+    # Persona 2: Variable Income Budgeter
+    elif primary_persona_id == 2:
+        income_features = features.get('income', {})
+        cash_flow_features = features.get('cash_flow', {})
+        
+        if income_features:
+            median_gap = income_features.get('median_pay_gap_days', 0)
+            metrics.append({
+                'label': 'Income Frequency',
+                'value': f"Every {median_gap:.0f} days",
+                'detail': 'Variable income pattern detected'
+            })
+        
+        if cash_flow_features:
+            buffer_months = cash_flow_features.get('cash_flow_buffer_months', 0)
+            metrics.append({
+                'label': 'Cash Flow Buffer',
+                'value': f"{buffer_months:.1f} months",
+                'detail': 'Low emergency cushion'
+            })
+            
+            volatility = cash_flow_features.get('balance_volatility', 0)
+            metrics.append({
+                'label': 'Balance Volatility',
+                'value': f"{volatility:.2f}",
+                'detail': 'High income variability'
+            })
+    
+    # Persona 3: Subscription-Heavy
+    elif primary_persona_id == 3:
+        subscription_features = features.get('subscriptions', {})
+        
+        if subscription_features:
+            recurring_count = subscription_features.get('recurring_merchant_count', 0)
+            monthly_spend = subscription_features.get('monthly_recurring_spend', 0)
+            total_spend = subscription_features.get('total_spend_30d', 1)
+            subscription_share = (monthly_spend / total_spend * 100) if total_spend > 0 else 0
+            
+            metrics.append({
+                'label': 'Recurring Subscriptions',
+                'value': f"{recurring_count:.0f} services",
+                'detail': None
+            })
+            
+            metrics.append({
+                'label': 'Monthly Subscription Cost',
+                'value': f"${monthly_spend:.2f}",
+                'detail': f"{subscription_share:.0f}% of total spending"
+            })
+    
+    # Persona 4: Savings Builder
+    elif primary_persona_id == 4:
+        savings_features = features.get('savings', {})
+        credit_features = features.get('credit', {})
+        
+        if savings_features:
+            growth_rate = savings_features.get('savings_growth_rate_pct', 0)
+            net_inflow = savings_features.get('net_savings_inflow_30d', 0)
+            
+            metrics.append({
+                'label': 'Savings Growth Rate',
+                'value': f"{growth_rate:.1f}%",
+                'detail': 'Positive trajectory'
+            })
+            
+            if net_inflow > 0:
+                metrics.append({
+                    'label': 'Monthly Savings',
+                    'value': f"${net_inflow:.2f}",
+                    'detail': None
+                })
+        
+        if credit_features:
+            utilization = credit_features.get('max_utilization_pct', 0)
+            metrics.append({
+                'label': 'Credit Utilization',
+                'value': f"{utilization:.0f}%",
+                'detail': 'Healthy level (<30%)'
+            })
+    
+    # Persona 5: Cash Flow Stressed
+    elif primary_persona_id == 5:
+        cash_flow_features = features.get('cash_flow', {})
+        
+        if cash_flow_features:
+            days_below_100 = cash_flow_features.get('days_below_100_pct', 0) * 100
+            volatility = cash_flow_features.get('balance_volatility', 0)
+            min_balance = cash_flow_features.get('min_balance_30d', 0)
+            
+            metrics.append({
+                'label': 'Low Balance Frequency',
+                'value': f"{days_below_100:.0f}% of days",
+                'detail': 'Balance below $100'
+            })
+            
+            metrics.append({
+                'label': 'Balance Volatility',
+                'value': f"{volatility:.2f}",
+                'detail': 'High fluctuation in account balance'
+            })
+            
+            metrics.append({
+                'label': 'Minimum Balance',
+                'value': f"${min_balance:.2f}",
+                'detail': 'Lowest balance in window'
+            })
+    
+    return {'metrics': metrics[:5]}  # Cap at 5 metrics
 
 
 def generate_recommendation(
@@ -116,6 +284,11 @@ def generate_recommendation(
     features = load_user_features(user_id, db_path)
     print(f"   Loaded {len(features)} feature types")
     
+    # 2.5. Generate user snapshot
+    print("\n2.5. Generating user financial snapshot...")
+    user_snapshot = generate_user_snapshot(persona_context, features)
+    print(f"   Generated {len(user_snapshot['metrics'])} key metrics")
+    
     # 3. Select educational content
     print("\n3. Selecting educational content...")
     target_personas = persona_context['target_personas']
@@ -129,17 +302,10 @@ def generate_recommendation(
     )
     print(f"   Selected {len(educational_items)} items")
     
-    # 4. Generate rationales for educational content (LLM)
-    print("\n4. Generating educational content rationales...")
-    educational_items = generate_educational_rationales(
-        educational_items,
-        persona_context,
-        features,
-        llm_config
-    )
+    # Note: "Why" generation removed for polish - user snapshot replaces redundant rationales
     
-    # 5. Generate actionable items (LLM)
-    print("\n5. Generating actionable items...")
+    # 4. Generate actionable items (LLM)
+    print("\n4. Generating actionable items...")
     action_count = rec_config.get('content_selection', {}).get('actionable_items_max', 3)
     actionable_items = generate_actionable_items_for_user(
         persona_context,
@@ -149,8 +315,8 @@ def generate_recommendation(
     )
     print(f"   Generated {len(actionable_items)} actionable items")
     
-    # 6. Select and explain partner offers
-    print("\n6. Selecting partner offers...")
+    # 5. Select and explain partner offers
+    print("\n5. Selecting partner offers...")
     max_offers = rec_config.get('content_selection', {}).get('partner_offers_max', 2)
     partner_offers = select_and_explain_offers(
         user_id,
@@ -163,8 +329,8 @@ def generate_recommendation(
     )
     print(f"   Selected {len(partner_offers)} eligible offers")
     
-    # 7. Assemble complete package
-    print("\n7. Assembling recommendation package...")
+    # 6. Assemble complete package
+    print("\n6. Assembling recommendation package...")
     generation_time = time.time() - start_time
     
     recommendation = {
@@ -173,6 +339,7 @@ def generate_recommendation(
         'window_30d_persona_id': persona_context['assignments_30d']['primary_persona_id'] if persona_context['assignments_30d'] else None,
         'window_180d_persona_id': persona_context['assignments_180d']['primary_persona_id'] if persona_context['assignments_180d'] else None,
         'target_personas': target_personas,
+        'user_snapshot': user_snapshot,
         'educational_content': educational_items,
         'actionable_items': actionable_items,
         'partner_offers': partner_offers,
@@ -181,8 +348,8 @@ def generate_recommendation(
         'generation_latency_seconds': generation_time
     }
     
-    # 8. Store in database
-    print("\n8. Storing recommendation...")
+    # 7. Store in database
+    print("\n7. Storing recommendation...")
     try:
         insert_recommendation(
             db_path=db_path,
@@ -191,6 +358,7 @@ def generate_recommendation(
             window_30d_persona_id=recommendation['window_30d_persona_id'],
             window_180d_persona_id=recommendation['window_180d_persona_id'],
             target_personas=target_personas,
+            user_snapshot=user_snapshot,
             educational_items=educational_items,
             actionable_items=actionable_items,
             partner_offers=partner_offers,
@@ -201,8 +369,8 @@ def generate_recommendation(
     except Exception as e:
         print(f"   ⚠ Storage failed: {e}")
     
-    # 9. Generate and store decision traces
-    print("\n9. Generating decision traces...")
+    # 8. Generate and store decision traces
+    print("\n8. Generating decision traces...")
     try:
         trace_ids = generate_and_store_traces(
             user_id=user_id,

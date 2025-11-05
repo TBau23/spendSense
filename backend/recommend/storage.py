@@ -31,6 +31,7 @@ def create_recommendation_tables(db_path: str):
             window_30d_persona_id INTEGER,
             window_180d_persona_id INTEGER,
             target_personas TEXT,  -- JSON array of targeted persona IDs
+            user_snapshot TEXT,  -- JSON object with persona-specific metrics
             
             -- Metadata
             generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -170,6 +171,7 @@ def insert_recommendation(
     window_30d_persona_id: Optional[int],
     window_180d_persona_id: Optional[int],
     target_personas: List[int],
+    user_snapshot: Dict[str, Any],
     educational_items: List[Dict],
     actionable_items: List[Dict],
     partner_offers: List[Dict],
@@ -186,6 +188,7 @@ def insert_recommendation(
         window_30d_persona_id: 30-day window persona ID
         window_180d_persona_id: 180-day window persona ID
         target_personas: List of targeted persona IDs
+        user_snapshot: User financial snapshot with key metrics
         educational_items: List of educational content items
         actionable_items: List of actionable items
         partner_offers: List of partner offers
@@ -200,15 +203,16 @@ def insert_recommendation(
         cursor.execute('''
             INSERT INTO recommendations (
                 recommendation_id, user_id, window_30d_persona_id, window_180d_persona_id,
-                target_personas, generated_at, llm_model, generation_latency_seconds,
+                target_personas, user_snapshot, generated_at, llm_model, generation_latency_seconds,
                 educational_item_count, actionable_item_count, partner_offer_count
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             recommendation_id,
             user_id,
             window_30d_persona_id,
             window_180d_persona_id,
             json.dumps(target_personas),
+            json.dumps(user_snapshot),
             datetime.now().isoformat(),
             llm_model,
             generation_latency_seconds,

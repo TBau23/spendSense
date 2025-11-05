@@ -132,6 +132,16 @@ def get_user_metrics(user_id: str, db_path: str) -> Dict[str, Any]:
     cursor = conn.cursor()
     
     try:
+        # Get user basic info
+        cursor.execute("""
+            SELECT name
+            FROM users
+            WHERE user_id = ?
+        """, (user_id,))
+        
+        user_row = cursor.fetchone()
+        full_name = user_row['name'] if user_row else None
+        
         # Get persona assignments (30d and 180d)
         personas = {}
         for window_days in [30, 180]:
@@ -207,6 +217,7 @@ def get_user_metrics(user_id: str, db_path: str) -> Dict[str, Any]:
         
         return {
             'user_id': user_id,
+            'full_name': full_name,
             'personas': personas,
             'accounts': accounts,
             'recommendations': recommendations,
