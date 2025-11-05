@@ -382,3 +382,71 @@
 **Alternatives Considered**: [What was rejected and why]  
 **Impact**: [Which modules/epics affected]
 
+---
+
+## Epic 5: Guardrails & Operator View
+
+### Decision: Consent Enforcement via Filtering
+**Epic**: Epic 5  
+**Decision**: Non-consented users are filtered from all operator views and API responses. They are invisible to operators, not shown with "consent required" warnings.  
+**Rationale**: Clean separation of concerns. Epic 6 will add consent management UI. Filtering ensures no accidental processing of non-consented user data.  
+**Alternatives Considered**:
+- Show non-consented users grayed out: Rejected to avoid UI clutter and potential privacy leaks
+- Require consent check on every operation: Implemented via check_consent() utility
+**Impact**: All operator API endpoints, frontend user lists, metrics computation
+
+### Decision: Simple 3-Status Workflow
+**Epic**: Epic 5  
+**Decision**: Recommendations have three statuses only: PENDING_REVIEW, APPROVED, FLAGGED. No draft, revision, or resubmit states.  
+**Rationale**: Sufficient for demo scope. Keeps database schema and UI simple. Flagged recommendations are dead-end until regenerated (Epic 6).  
+**Alternatives Considered**:
+- Complex workflow with revision states: Rejected as over-engineered for demo
+- Auto-approve for certain personas: Rejected to maintain human-in-the-loop principle
+**Impact**: recommendations table schema, operator dashboard approval actions
+
+### Decision: Override Placeholder Only
+**Epic**: Epic 5  
+**Decision**: Override functionality is commented out in code with grayed-out button in UI. Will be implemented in Epic 6.  
+**Rationale**: Approve/flag covers core workflow. Override adds significant complexity (edit UI, audit trail, validation). Prioritize getting basic workflow functional first.  
+**Alternatives Considered**:
+- Implement override now: Rejected due to time constraints and complexity
+- Remove override from design: Rejected as it's a valuable future feature
+**Impact**: ApprovalActions component, approval.py module
+
+### Decision: Manual Tone Validation Only
+**Epic**: Epic 5  
+**Decision**: No automated tone checking (rules-based or LLM-based). Operator reviews tone manually during approval.  
+**Rationale**: Automated checks add complexity with limited value for 50-100 user demo. Operator review is sufficient guardrail. Avoids false positives from automated tone detectors.  
+**Alternatives Considered**:
+- Rules-based "shaming word" blacklist: Rejected as brittle and prone to false positives
+- LLM-based tone validator: Rejected as adds latency and API cost
+**Impact**: Operator review process, recommendation approval workflow
+
+### Decision: Decision Traces as Separate Table
+**Epic**: Epic 5  
+**Decision**: Store decision traces in dedicated `decision_traces` table with JSON content field, not embedded in recommendations table.  
+**Rationale**: Flexible schema (can evolve trace structure), easy to query, doesn't bloat recommendations table. Enables trace versioning in future.  
+**Alternatives Considered**:
+- Embed traces in recommendations table: Rejected due to schema rigidity
+- Separate tables per trace type: Rejected as over-normalized
+**Impact**: Database schema, trace generation and retrieval logic
+
+### Decision: FastAPI for Operator Endpoints
+**Epic**: Epic 5  
+**Decision**: Use FastAPI with 8 dedicated operator endpoints rather than direct backend function calls from frontend.  
+**Rationale**: Clean separation between frontend/backend, enables future API consumers, provides automatic OpenAPI docs, aligns with production patterns.  
+**Alternatives Considered**:
+- Direct function calls via Python bridge: Rejected as non-scalable
+- GraphQL API: Rejected as overkill for demo scope
+**Impact**: operator.py API module, frontend api client, deployment architecture
+
+### Decision: Metrics Caching (60s TTL)
+**Epic**: Epic 5  
+**Decision**: Aggregate metrics cached for 60 seconds to reduce database load. Force refresh available via query parameter.  
+**Rationale**: Metrics computation involves multiple table scans. For demo with ~75 users, 60s staleness acceptable. Improves dashboard responsiveness.  
+**Alternatives Considered**:
+- No caching: Rejected due to repeated expensive queries
+- Longer cache (5 min): Rejected as metrics would feel stale during testing
+- Redis/external cache: Rejected as over-engineered for demo
+**Impact**: metrics.py module, /api/operator/metrics endpoint
+

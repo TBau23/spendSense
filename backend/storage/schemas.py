@@ -1,6 +1,21 @@
 """
 Database schema definitions for SpendSense
-Creates 4 core tables: users, accounts, transactions, liabilities
+
+Core tables:
+- users: User data with consent tracking
+- accounts: Checking, savings, credit accounts
+- transactions: Transaction history
+- liabilities: Credit cards, loans, mortgages
+
+Epic 4 tables (created in backend/recommend/storage.py):
+- recommendations: Generated recommendation packages
+- recommendation_items: Educational/actionable/partner content
+- content_catalog: Educational content library
+- partner_offers: Product catalog
+- generic_templates: Pre-approved fallback content
+
+Epic 5 tables (created in backend/storage/migrations.py):
+- decision_traces: Recommendation rationale and decision history
 """
 
 import sqlite3

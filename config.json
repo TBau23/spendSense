@@ -91,6 +91,20 @@
   "eligibility": {
     "credit_score_estimation_enabled": true,
     "strict_mode": false
+  },
+  "api": {
+    "host": "localhost",
+    "port": 8000,
+    "cors_origins": [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "http://localhost:8000"
+    ]
+  },
+  "operator": {
+    "metrics_cache_ttl_seconds": 60,
+    "default_page_size": 50,
+    "max_page_size": 200
   }
 }
 
