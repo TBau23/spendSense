@@ -45,8 +45,7 @@ const MetricsPanel = ({ metrics }) => {
         ))}
       </div>
       <div className="metrics-detail">
-        <p>Approved: {metrics.approved_count} | Flagged: {metrics.flagged_count} | 
-           Avg per User: {metrics.avg_recs_per_user}</p>
+        <p>Approved: {metrics.approved_count} | Flagged: {metrics.flagged_count}</p>
       </div>
     </div>
   );

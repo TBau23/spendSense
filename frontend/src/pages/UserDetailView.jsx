@@ -20,6 +20,8 @@ const UserDetailView = () => {
   const [traces, setTraces] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showMetrics, setShowMetrics] = useState(true);
+  const [showTraces, setShowTraces] = useState(true);
 
   useEffect(() => {
     loadUserData();
@@ -90,37 +92,54 @@ const UserDetailView = () => {
         </button>
       </header>
 
-      {/* 3-Column Layout */}
-      <div className="detail-layout">
-        {/* Left Column: User Metrics */}
-        <aside className="left-column">
-          <UserMetrics metrics={userMetrics} />
-        </aside>
+      {/* Info Panel Tabs */}
+      <div className="info-tabs">
+        <button 
+          className={`tab-btn ${showMetrics ? 'active' : ''}`}
+          onClick={() => {
+            setShowMetrics(!showMetrics);
+            if (!showMetrics) setShowTraces(false);
+          }}
+        >
+          User Metrics
+        </button>
+        <button 
+          className={`tab-btn ${showTraces ? 'active' : ''}`}
+          onClick={() => {
+            setShowTraces(!showTraces);
+            if (!showTraces) setShowMetrics(false);
+          }}
+        >
+          Decision Traces
+        </button>
+      </div>
 
-        {/* Center Column: Recommendations */}
-        <main className="center-column">
-          <h2>Recommendations ({recommendations.length})</h2>
-          {recommendations.length === 0 ? (
-            <div className="no-recommendations">
-              <p>No recommendations generated for this user yet.</p>
-            </div>
-          ) : (
-            <div className="recommendations-list">
-              {recommendations.map((rec) => (
-                <RecommendationCard 
-                  key={rec.recommendation_id} 
-                  recommendation={rec}
-                  onUpdate={handleRecommendationUpdate}
-                />
-              ))}
-            </div>
-          )}
-        </main>
+      {/* Collapsible Info Panel */}
+      {(showMetrics || showTraces) && (
+        <div className="info-panel">
+          {showMetrics && <UserMetrics metrics={userMetrics} />}
+          {showTraces && <DecisionTrace traces={traces} />}
+        </div>
+      )}
 
-        {/* Right Column: Decision Traces */}
-        <aside className="right-column">
-          <DecisionTrace traces={traces} />
-        </aside>
+      {/* Main Content: Recommendations */}
+      <div className="recommendations-container">
+        <h2>Recommendations ({recommendations.length})</h2>
+        {recommendations.length === 0 ? (
+          <div className="no-recommendations">
+            <p>No recommendations generated for this user yet.</p>
+          </div>
+        ) : (
+          <div className="recommendations-list">
+            {recommendations.map((rec) => (
+              <RecommendationCard 
+                key={rec.recommendation_id} 
+                recommendation={rec}
+                onUpdate={handleRecommendationUpdate}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 /**
  * UserMetrics Component
  * 
- * Displays user-specific metrics (personas, features, accounts)
+ * Displays user-specific metrics with 30d vs 180d comparison
  */
 
 import React from 'react';
@@ -22,86 +22,169 @@ const UserMetrics = ({ metrics }) => {
     return personas[persona_id] || 'Stable';
   };
 
-  return (
-    <div className="user-metrics">
-      <h3>User Metrics</h3>
+  const getPersonaPriority = (persona_id) => {
+    const priorities = {
+      1: 'CRITICAL',
+      2: 'HIGH',
+      3: 'MEDIUM',
+      4: 'LOW',
+      5: 'HIGH'
+    };
+    return priorities[persona_id] || 'LOW';
+  };
 
-      {/* Persona Assignments */}
-      <div className="metric-section">
-        <h4>Persona Assignments</h4>
-        <div className="persona-info">
-          <div className="persona-window">
-            <strong>30d Window:</strong>
-            <p>{metrics.personas?.window_30d ? 
-              getPersonaName(metrics.personas.window_30d.primary_persona_id) : 
-              'Not assigned'
-            }</p>
-          </div>
-          <div className="persona-window">
-            <strong>180d Window:</strong>
-            <p>{metrics.personas?.window_180d ? 
-              getPersonaName(metrics.personas.window_180d.primary_persona_id) : 
-              'Not assigned'
-            }</p>
-          </div>
+  const getPriorityClass = (priority) => {
+    return {
+      'CRITICAL': 'priority-critical',
+      'HIGH': 'priority-high',
+      'MEDIUM': 'priority-medium',
+      'LOW': 'priority-low'
+    }[priority] || 'priority-low';
+  };
+
+  const persona30d = metrics.personas?.window_30d;
+  const persona180d = metrics.personas?.window_180d;
+  
+  // Determine if persona changed
+  const personaChanged = persona30d?.primary_persona_id !== persona180d?.primary_persona_id;
+  
+  // Progress bar component
+  const ProgressBar = ({ value, label, thresholds, reverse = false }) => {
+    const percentage = Math.min(Math.max(value * 100, 0), 100);
+    let colorClass = 'progress-good';
+    
+    if (thresholds) {
+      if (reverse) {
+        // For metrics where lower is better (utilization, days below $100)
+        if (percentage >= thresholds.critical) colorClass = 'progress-critical';
+        else if (percentage >= thresholds.warning) colorClass = 'progress-warning';
+      } else {
+        // For metrics where higher is better (savings growth)
+        if (percentage >= thresholds.good) colorClass = 'progress-good';
+        else if (percentage >= thresholds.warning) colorClass = 'progress-warning';
+        else colorClass = 'progress-critical';
+      }
+    }
+    
+    return (
+      <div className="progress-container">
+        <div className="progress-label">
+          <span>{label}</span>
+          <span className="progress-value">{percentage.toFixed(1)}%</span>
+        </div>
+        <div className="progress-bar">
+          <div className={`progress-fill ${colorClass}`} style={{ width: `${percentage}%` }} />
         </div>
       </div>
+    );
+  };
 
-      {/* Key Features */}
-      <div className="metric-section">
-        <h4>Key Features</h4>
-        {metrics.features && Object.keys(metrics.features).length > 0 ? (
-          <dl className="feature-list">
-            {metrics.features.credit_utilization !== undefined && (
-              <>
-                <dt>Credit Utilization:</dt>
-                <dd>{(metrics.features.credit_utilization * 100).toFixed(1)}%</dd>
-              </>
-            )}
-            {metrics.features.savings_growth_rate !== undefined && (
-              <>
-                <dt>Savings Growth:</dt>
-                <dd>{(metrics.features.savings_growth_rate * 100).toFixed(1)}%</dd>
-              </>
-            )}
-            {metrics.features.pct_days_below_100 !== undefined && (
-              <>
-                <dt>Days Below $100:</dt>
-                <dd>{(metrics.features.pct_days_below_100 * 100).toFixed(1)}%</dd>
-              </>
-            )}
-          </dl>
-        ) : (
-          <p className="no-data">Features not available</p>
-        )}
-      </div>
+  return (
+    <div className="user-metrics">
+      {/* Layout: Grid for full width display */}
+      <div className="metrics-grid-layout">
+        {/* Persona Comparison */}
+        <div className="metric-section persona-comparison">
+          <h4>Persona Timeline</h4>
+          
+          <div className="timeline-comparison">
+            {/* 30d Window */}
+            <div className="timeline-item current">
+              <div className="timeline-label">30 Days</div>
+              {persona30d ? (
+                <div className={`persona-badge ${getPriorityClass(getPersonaPriority(persona30d.primary_persona_id))}`}>
+                  <div className="persona-name">{getPersonaName(persona30d.primary_persona_id)}</div>
+                  <div className="persona-priority">{getPersonaPriority(persona30d.primary_persona_id)}</div>
+                </div>
+              ) : (
+                <div className="persona-badge priority-low">
+                  <div className="persona-name">Not Assigned</div>
+                </div>
+              )}
+            </div>
 
-      {/* Accounts */}
-      <div className="metric-section">
-        <h4>Accounts</h4>
-        <dl className="account-list">
-          <dt>Checking:</dt>
-          <dd>{metrics.accounts?.checking_count || 0}</dd>
-          <dt>Savings:</dt>
-          <dd>{metrics.accounts?.savings_count || 0}</dd>
-          <dt>Credit Cards:</dt>
-          <dd>{metrics.accounts?.credit_card_count || 0}</dd>
-        </dl>
-      </div>
+            {/* Change Indicator */}
+            <div className="timeline-arrow">
+              {personaChanged ? '→' : '='}
+            </div>
 
-      {/* Recommendation Stats */}
-      <div className="metric-section">
-        <h4>Recommendations</h4>
-        <dl className="rec-stats">
-          <dt>Total:</dt>
-          <dd>{metrics.recommendations?.total_generated || 0}</dd>
-          <dt>Pending:</dt>
-          <dd className="pending">{metrics.recommendations?.pending || 0}</dd>
-          <dt>Approved:</dt>
-          <dd className="approved">{metrics.recommendations?.approved || 0}</dd>
-          <dt>Flagged:</dt>
-          <dd className="flagged">{metrics.recommendations?.flagged || 0}</dd>
-        </dl>
+            {/* 180d Window */}
+            <div className="timeline-item historical">
+              <div className="timeline-label">180 Days</div>
+              {persona180d ? (
+                <div className={`persona-badge ${getPriorityClass(getPersonaPriority(persona180d.primary_persona_id))}`}>
+                  <div className="persona-name">{getPersonaName(persona180d.primary_persona_id)}</div>
+                  <div className="persona-priority">{getPersonaPriority(persona180d.primary_persona_id)}</div>
+                </div>
+              ) : (
+                <div className="persona-badge priority-low">
+                  <div className="persona-name">Not Assigned</div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {personaChanged && (
+            <div className="persona-change-notice">
+              Persona changed from 180d to 30d window
+            </div>
+          )}
+        </div>
+
+        {/* Key Features with Progress Bars */}
+        <div className="metric-section">
+          <h4>Key Indicators</h4>
+          {metrics.features && Object.keys(metrics.features).length > 0 ? (
+            <div className="features-visual">
+              {metrics.features.credit_utilization !== undefined && (
+                <ProgressBar 
+                  value={metrics.features.credit_utilization} 
+                  label="Credit Utilization"
+                  thresholds={{ critical: 50, warning: 30 }}
+                  reverse={true}
+                />
+              )}
+              {metrics.features.savings_growth_rate !== undefined && (
+                <ProgressBar 
+                  value={Math.abs(metrics.features.savings_growth_rate)} 
+                  label="Savings Growth"
+                  thresholds={{ good: 2, warning: 0.5 }}
+                  reverse={false}
+                />
+              )}
+              {metrics.features.pct_days_below_100 !== undefined && (
+                <ProgressBar 
+                  value={metrics.features.pct_days_below_100} 
+                  label="Days Below $100"
+                  thresholds={{ critical: 30, warning: 10 }}
+                  reverse={true}
+                />
+              )}
+            </div>
+          ) : (
+            <p className="no-data">Features not available</p>
+          )}
+        </div>
+
+        {/* Accounts Summary */}
+        <div className="metric-section">
+          <h4>Accounts</h4>
+          <div className="accounts-grid">
+            <div className="account-item">
+              <div className="account-label">Checking</div>
+              <div className="account-count">{metrics.accounts?.checking_count || 0}</div>
+            </div>
+            <div className="account-item">
+              <div className="account-label">Savings</div>
+              <div className="account-count">{metrics.accounts?.savings_count || 0}</div>
+            </div>
+            <div className="account-item">
+              <div className="account-label">Credit Cards</div>
+              <div className="account-count">{metrics.accounts?.credit_card_count || 0}</div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );

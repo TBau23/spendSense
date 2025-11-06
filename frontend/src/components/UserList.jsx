@@ -22,10 +22,13 @@ const UserList = ({ users, onFilterChange }) => {
   };
 
   const getStatusBadge = (user) => {
+    // Priority order: Pending > Flagged > Approved > No Recs
     if (user.pending_count > 0) {
       return <span className="badge badge-pending">Pending ({user.pending_count})</span>;
-    } else if (user.rec_count > 0) {
-      return <span className="badge badge-approved">Approved</span>;
+    } else if (user.flagged_count > 0) {
+      return <span className="badge badge-flagged">Flagged ({user.flagged_count})</span>;
+    } else if (user.approved_count > 0) {
+      return <span className="badge badge-approved">Approved ({user.approved_count})</span>;
     } else {
       return <span className="badge badge-none">No Recs</span>;
     }

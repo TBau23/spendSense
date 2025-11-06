@@ -312,7 +312,7 @@ def get_user_list_with_status(
     conn.row_factory = sqlite3.Row
     
     try:
-        # Build query
+        # Build query - compute all status counts first, then filter in WHERE clause
         query = """
             SELECT 
                 u.user_id,
@@ -321,6 +321,8 @@ def get_user_list_with_status(
                 pa.primary_persona_name,
                 COUNT(DISTINCT r.recommendation_id) as rec_count,
                 SUM(CASE WHEN r.status = 'PENDING_REVIEW' THEN 1 ELSE 0 END) as pending_count,
+                SUM(CASE WHEN r.status = 'APPROVED' THEN 1 ELSE 0 END) as approved_count,
+                SUM(CASE WHEN r.status = 'FLAGGED' THEN 1 ELSE 0 END) as flagged_count,
                 MAX(r.generated_at) as last_rec_date
             FROM users u
             LEFT JOIN persona_assignments pa 
@@ -332,17 +334,22 @@ def get_user_list_with_status(
         
         params = []
         
-        # Add filters
+        # Add persona filter
         if persona_filter is not None:
             query += " AND pa.primary_persona_id = ?"
             params.append(persona_filter)
         
-        if status_filter:
-            query += " AND r.status = ?"
-            params.append(status_filter)
-        
-        # Group by user
+        # Group by user first
         query += " GROUP BY u.user_id, u.name, pa.primary_persona_id, pa.primary_persona_name"
+        
+        # Apply status filter in HAVING clause (after aggregation)
+        if status_filter:
+            if status_filter == 'PENDING_REVIEW':
+                query += " HAVING pending_count > 0"
+            elif status_filter == 'APPROVED':
+                query += " HAVING approved_count > 0"
+            elif status_filter == 'FLAGGED':
+                query += " HAVING flagged_count > 0"
         
         # Sort
         if sort_by == 'name':
@@ -365,6 +372,8 @@ def get_user_list_with_status(
                 'rec_count': row['rec_count'] or 0,
                 'has_pending_recs': (row['pending_count'] or 0) > 0,
                 'pending_count': row['pending_count'] or 0,
+                'approved_count': row['approved_count'] or 0,
+                'flagged_count': row['flagged_count'] or 0,
                 'last_rec_date': row['last_rec_date']
             })
         
