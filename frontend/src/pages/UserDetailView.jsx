@@ -9,7 +9,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import UserMetrics from '../components/UserMetrics';
 import RecommendationCard from '../components/RecommendationCard';
 import DecisionTrace from '../components/DecisionTrace';
-import { fetchUserDetail, fetchUserRecommendations, fetchTraces } from '../api/operator';
+import { fetchUserDetail, fetchUserRecommendations, fetchTraces, generateRecommendation } from '../api/operator';
 
 const UserDetailView = () => {
   const { userId } = useParams();
@@ -22,6 +22,7 @@ const UserDetailView = () => {
   const [error, setError] = useState(null);
   const [showMetrics, setShowMetrics] = useState(true);
   const [showTraces, setShowTraces] = useState(true);
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -53,6 +54,21 @@ const UserDetailView = () => {
   const handleRecommendationUpdate = () => {
     // Reload data after approval/flag action
     loadUserData();
+  };
+
+  const handleGenerateRecommendation = async () => {
+    setGenerating(true);
+    try {
+      await generateRecommendation(userId);
+      // Success - reload data to show new recommendation
+      await loadUserData();
+      alert('Recommendation generated successfully!');
+    } catch (err) {
+      console.error('Failed to generate recommendation:', err);
+      alert(`Failed to generate recommendation: ${err.message}`);
+    } finally {
+      setGenerating(false);
+    }
   };
 
   if (loading) {
@@ -87,9 +103,18 @@ const UserDetailView = () => {
         <h1>
           {userMetrics?.full_name || 'User'} (***{userId.slice(-5)})
         </h1>
-        <button className="btn btn-secondary" onClick={loadUserData}>
-          Refresh
-        </button>
+        <div className="header-actions">
+          <button 
+            className="btn btn-primary" 
+            onClick={handleGenerateRecommendation}
+            disabled={generating}
+          >
+            {generating ? 'Generating...' : 'Generate New Recommendation'}
+          </button>
+          <button className="btn btn-secondary" onClick={loadUserData}>
+            Refresh
+          </button>
+        </div>
       </header>
 
       {/* Info Panel Tabs */}

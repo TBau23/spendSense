@@ -8,6 +8,7 @@
 import React, { useState } from 'react';
 import ApprovalActions from './ApprovalActions';
 import UserSnapshot from './UserSnapshot';
+import { deleteRecommendation } from '../api/operator';
 
 // Carousel component for cycling through items
 const ItemCarousel = ({ items, renderItem }) => {
@@ -53,8 +54,9 @@ const ItemCarousel = ({ items, renderItem }) => {
   );
 };
 
-const RecommendationCard = ({ recommendation, onUpdate }) => {
+const RecommendationCard = ({ recommendation, onUpdate, hideOperatorActions = false }) => {
   const [expanded, setExpanded] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const getStatusColor = (status) => {
     const colors = {
@@ -63,6 +65,28 @@ const RecommendationCard = ({ recommendation, onUpdate }) => {
       'FLAGGED': 'red'
     };
     return colors[status] || 'gray';
+  };
+
+  const handleDelete = async (e) => {
+    e.stopPropagation(); // Prevent card expansion
+    
+    if (!window.confirm('Are you sure you want to delete this recommendation? This action cannot be undone.')) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      await deleteRecommendation(recommendation.recommendation_id);
+      // Success - notify parent to refresh
+      if (onUpdate) {
+        onUpdate();
+      }
+    } catch (err) {
+      console.error('Failed to delete recommendation:', err);
+      alert(`Failed to delete recommendation: ${err.message}`);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const formatDate = (dateString) => {
@@ -85,12 +109,26 @@ const RecommendationCard = ({ recommendation, onUpdate }) => {
       {/* Card Header */}
       <div className="card-header" onClick={() => setExpanded(!expanded)}>
         <div className="card-title">
-          <span className={`status-badge ${getStatusColor(recommendation.status)}`}>
-            {recommendation.status.replace('_', ' ')}
-          </span>
+          {!hideOperatorActions && (
+            <span className={`status-badge ${getStatusColor(recommendation.status)}`}>
+              {recommendation.status.replace('_', ' ')}
+            </span>
+          )}
           <span className="card-date">Generated: {formatDate(recommendation.generated_at)}</span>
         </div>
-        <button className="expand-btn">{expanded ? '▼' : '▶'}</button>
+        <div className="card-header-actions">
+          {!hideOperatorActions && (
+            <button 
+              className="delete-btn" 
+              onClick={handleDelete}
+              disabled={deleting}
+              title="Delete this recommendation"
+            >
+              {deleting ? '⏳' : '🗑️'}
+            </button>
+          )}
+          <button className="expand-btn">{expanded ? '▼' : '▶'}</button>
+        </div>
       </div>
 
       {/* Card Content */}
@@ -192,8 +230,8 @@ const RecommendationCard = ({ recommendation, onUpdate }) => {
             </div>
           )}
 
-          {/* Approval Actions (only for pending) */}
-          {recommendation.status === 'PENDING_REVIEW' && (
+          {/* Approval Actions (only for pending and operator view) */}
+          {!hideOperatorActions && recommendation.status === 'PENDING_REVIEW' && (
             <ApprovalActions 
               recommendationId={recommendation.recommendation_id} 
               onUpdate={onUpdate}

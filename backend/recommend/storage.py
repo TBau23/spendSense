@@ -296,7 +296,7 @@ def insert_recommendation(
 
 def load_recommendation(db_path: str, user_id: str) -> Optional[Dict[str, Any]]:
     """
-    Load the most recent recommendation for a user.
+    Load the most recent recommendation for a user (excludes DELETED).
     
     Args:
         db_path: Path to SQLite database
@@ -310,10 +310,10 @@ def load_recommendation(db_path: str, user_id: str) -> Optional[Dict[str, Any]]:
     cursor = conn.cursor()
     
     try:
-        # Load parent recommendation
+        # Load parent recommendation (exclude DELETED)
         cursor.execute('''
             SELECT * FROM recommendations
-            WHERE user_id = ?
+            WHERE user_id = ? AND status != 'DELETED'
             ORDER BY generated_at DESC
             LIMIT 1
         ''', (user_id,))
@@ -460,7 +460,7 @@ def load_generic_template(db_path: str, persona_id: int) -> Optional[Dict[str, A
 
 def export_recommendations_to_parquet(db_path: str, output_path: str):
     """
-    Export recommendations to Parquet for analytics.
+    Export recommendations to Parquet for analytics (excludes DELETED).
     
     Args:
         db_path: Path to SQLite database
@@ -468,7 +468,7 @@ def export_recommendations_to_parquet(db_path: str, output_path: str):
     """
     conn = sqlite3.connect(db_path)
     
-    # Load all recommendations
+    # Load all recommendations (exclude DELETED)
     df = pd.read_sql_query('''
         SELECT 
             user_id,
@@ -483,6 +483,7 @@ def export_recommendations_to_parquet(db_path: str, output_path: str):
             generation_latency_seconds,
             llm_model
         FROM recommendations
+        WHERE status != 'DELETED'
         ORDER BY generated_at
     ''', conn)
     

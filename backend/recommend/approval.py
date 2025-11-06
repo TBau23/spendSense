@@ -173,7 +173,7 @@ def get_recommendations_by_status(
     limit: Optional[int] = None
 ) -> List[Dict[str, Any]]:
     """
-    Get all recommendations with a specific status
+    Get all recommendations with a specific status (excludes DELETED)
     
     Args:
         status: Status filter ('PENDING_REVIEW', 'APPROVED', 'FLAGGED')
@@ -188,11 +188,19 @@ def get_recommendations_by_status(
     cursor = conn.cursor()
     
     try:
-        query = """
-            SELECT * FROM recommendations 
-            WHERE status = ?
-            ORDER BY generated_at DESC
-        """
+        # Filter by status and exclude DELETED (unless specifically requesting DELETED)
+        if status == 'DELETED':
+            query = """
+                SELECT * FROM recommendations 
+                WHERE status = ?
+                ORDER BY generated_at DESC
+            """
+        else:
+            query = """
+                SELECT * FROM recommendations 
+                WHERE status = ? AND status != 'DELETED'
+                ORDER BY generated_at DESC
+            """
         
         if limit:
             query += f" LIMIT {limit}"
@@ -212,7 +220,7 @@ def get_user_recommendations(
     status: Optional[str] = None
 ) -> List[Dict[str, Any]]:
     """
-    Get all recommendations for a specific user
+    Get all recommendations for a specific user (excludes DELETED by default)
     
     Args:
         user_id: User identifier
@@ -228,15 +236,24 @@ def get_user_recommendations(
     
     try:
         if status:
-            cursor.execute("""
-                SELECT * FROM recommendations
-                WHERE user_id = ? AND status = ?
-                ORDER BY generated_at DESC
-            """, (user_id, status))
+            # If specifically requesting DELETED, allow it; otherwise exclude DELETED
+            if status == 'DELETED':
+                cursor.execute("""
+                    SELECT * FROM recommendations
+                    WHERE user_id = ? AND status = ?
+                    ORDER BY generated_at DESC
+                """, (user_id, status))
+            else:
+                cursor.execute("""
+                    SELECT * FROM recommendations
+                    WHERE user_id = ? AND status = ? AND status != 'DELETED'
+                    ORDER BY generated_at DESC
+                """, (user_id, status))
         else:
+            # Exclude DELETED when fetching all
             cursor.execute("""
                 SELECT * FROM recommendations
-                WHERE user_id = ?
+                WHERE user_id = ? AND status != 'DELETED'
                 ORDER BY generated_at DESC
             """, (user_id,))
         

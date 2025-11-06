@@ -158,3 +158,106 @@ def update_consent(user_id: str, consent: bool, db_path: str) -> None:
     finally:
         conn.close()
 
+
+def grant_consent(user_id: str, db_path: str) -> bool:
+    """
+    Grant consent for a user (Epic 6 - Consent Management)
+    
+    Updates user consent status to true. Recommendation generation
+    should be triggered separately by the API endpoint.
+    
+    Args:
+        user_id: User identifier
+        db_path: Path to SQLite database
+        
+    Returns:
+        True if consent granted successfully
+        
+    Raises:
+        ValueError: If user does not exist
+    """
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    try:
+        # Check if user exists
+        cursor.execute("SELECT user_id FROM users WHERE user_id = ?", (user_id,))
+        if cursor.fetchone() is None:
+            raise ValueError(f"User {user_id} does not exist")
+        
+        # Update consent status
+        cursor.execute("""
+            UPDATE users 
+            SET consent_status = 1, 
+                consent_updated_at = CURRENT_TIMESTAMP
+            WHERE user_id = ?
+        """, (user_id,))
+        
+        conn.commit()
+        logger.info(f"Consent granted for user {user_id}")
+        return True
+        
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error granting consent for user {user_id}: {e}")
+        raise
+    finally:
+        conn.close()
+
+
+def revoke_consent(user_id: str, db_path: str) -> bool:
+    """
+    Revoke consent for a user (Epic 6 - Consent Management)
+    
+    Updates user consent status to false and soft deletes all
+    recommendations by setting their status to 'DELETED'.
+    
+    Args:
+        user_id: User identifier
+        db_path: Path to SQLite database
+        
+    Returns:
+        True if consent revoked successfully
+        
+    Raises:
+        ValueError: If user does not exist
+    """
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    try:
+        # Check if user exists
+        cursor.execute("SELECT user_id FROM users WHERE user_id = ?", (user_id,))
+        if cursor.fetchone() is None:
+            raise ValueError(f"User {user_id} does not exist")
+        
+        # Update consent status
+        cursor.execute("""
+            UPDATE users 
+            SET consent_status = 0, 
+                consent_updated_at = CURRENT_TIMESTAMP
+            WHERE user_id = ?
+        """, (user_id,))
+        
+        # Soft delete all recommendations for this user
+        cursor.execute("""
+            UPDATE recommendations 
+            SET status = 'DELETED',
+                reviewed_at = CURRENT_TIMESTAMP
+            WHERE user_id = ?
+            AND status != 'DELETED'
+        """, (user_id,))
+        
+        deleted_count = cursor.rowcount
+        
+        conn.commit()
+        logger.info(f"Consent revoked for user {user_id}, soft deleted {deleted_count} recommendations")
+        return True
+        
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error revoking consent for user {user_id}: {e}")
+        raise
+    finally:
+        conn.close()
+

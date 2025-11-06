@@ -64,6 +64,10 @@ async def root():
 from .operator import router as operator_router
 app.include_router(operator_router, prefix="/api/operator", tags=["operator"])
 
+# Import and include user routes (Epic 6)
+from .user import router as user_router
+app.include_router(user_router, prefix="/api", tags=["users"])
+
 
 # Error handlers
 @app.exception_handler(HTTPException)

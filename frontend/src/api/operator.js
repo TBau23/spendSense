@@ -189,3 +189,69 @@ export const healthCheck = async () => {
   }
 };
 
+// ========== Epic 6: Consent & Recommendation Management ==========
+
+/**
+ * Generate a new recommendation for a user
+ * 
+ * @param {string} userId - User identifier
+ * @returns {Promise<Object>} - Generated recommendation
+ */
+export const generateRecommendation = async (userId) => {
+  try {
+    const response = await apiClient.post(`/api/operator/users/${userId}/generate`);
+    return response.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+/**
+ * Delete a recommendation (soft delete)
+ * 
+ * @param {string} recId - Recommendation identifier
+ * @returns {Promise<Object>} - Delete confirmation
+ */
+export const deleteRecommendation = async (recId) => {
+  try {
+    const response = await apiClient.delete(`/api/operator/recommendations/${recId}`);
+    return response.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+/**
+ * Grant consent for a user
+ * 
+ * @param {string} userId - User identifier
+ * @returns {Promise<Object>} - Consent grant confirmation
+ */
+export const grantConsent = async (userId) => {
+  try {
+    const response = await apiClient.post('/api/operator/consent/grant', {
+      user_id: userId
+    });
+    return response.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+/**
+ * Revoke consent for a user
+ * 
+ * @param {string} userId - User identifier
+ * @returns {Promise<Object>} - Consent revoke confirmation
+ */
+export const revokeConsent = async (userId) => {
+  try {
+    const response = await apiClient.post('/api/operator/consent/revoke', {
+      user_id: userId
+    });
+    return response.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+

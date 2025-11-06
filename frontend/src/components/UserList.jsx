@@ -22,6 +22,11 @@ const UserList = ({ users, onFilterChange }) => {
   };
 
   const getStatusBadge = (user) => {
+    // Epic 6: Check consent first
+    if (!user.consent_status) {
+      return <span className="badge badge-no-consent">Consent Required</span>;
+    }
+    
     // Priority order: Pending > Flagged > Approved > No Recs
     if (user.pending_count > 0) {
       return <span className="badge badge-pending">Pending ({user.pending_count})</span>;
@@ -115,24 +120,31 @@ const UserList = ({ users, onFilterChange }) => {
               <td colSpan="7" className="no-results">No users found</td>
             </tr>
           ) : (
-            users.map((user) => (
-              <tr key={user.user_id} className={user.has_pending_recs ? 'has-pending' : ''}>
-                <td>{user.name}</td>
-                <td className="user-id">{maskUserId(user.user_id)}</td>
-                <td>{getPersonaName(user.primary_persona_id)}</td>
-                <td>{getStatusBadge(user)}</td>
-                <td>{user.rec_count}</td>
-                <td>{user.last_rec_date ? new Date(user.last_rec_date).toLocaleDateString() : 'N/A'}</td>
-                <td>
-                  <button 
-                    className="btn btn-primary btn-sm"
-                    onClick={() => navigate(`/operator/users/${user.user_id}`)}
-                  >
-                    View Details
-                  </button>
-                </td>
-              </tr>
-            ))
+            users.map((user) => {
+              const isConsented = user.consent_status;
+              const rowClass = !isConsented ? 'user-no-consent' : (user.has_pending_recs ? 'has-pending' : '');
+              
+              return (
+                <tr key={user.user_id} className={rowClass}>
+                  <td>{user.name}</td>
+                  <td className="user-id">{maskUserId(user.user_id)}</td>
+                  <td>{isConsented ? getPersonaName(user.primary_persona_id) : '—'}</td>
+                  <td>{getStatusBadge(user)}</td>
+                  <td>{isConsented ? user.rec_count : '—'}</td>
+                  <td>{isConsented && user.last_rec_date ? new Date(user.last_rec_date).toLocaleDateString() : '—'}</td>
+                  <td>
+                    <button 
+                      className="btn btn-primary btn-sm"
+                      onClick={() => isConsented && navigate(`/operator/users/${user.user_id}`)}
+                      disabled={!isConsented}
+                      title={!isConsented ? 'User has not granted consent' : 'View user details'}
+                    >
+                      View Details
+                    </button>
+                  </td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>

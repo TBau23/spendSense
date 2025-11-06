@@ -450,3 +450,83 @@
 - Redis/external cache: Rejected as over-engineered for demo
 **Impact**: metrics.py module, /api/operator/metrics endpoint
 
+---
+
+## Epic 6: Consent Management & End User Experience
+
+### Decision: Soft Delete for Recommendations
+**Epic**: Epic 6  
+**Decision**: Recommendations are soft deleted (status = 'DELETED') rather than hard deleted from database. All queries filter out DELETED status.  
+**Rationale**: Preserves audit trail for compliance and debugging. Allows recovery if consent revoked accidentally. Simple to implement with status field.  
+**Alternatives Considered**:
+- Hard delete: Rejected due to loss of audit trail and potential data recovery needs
+- Archive table: Rejected as over-engineered for demo scope
+- Soft delete with deleted_at timestamp: Accepted but simplified to just status change
+**Impact**: All recommendation queries, metrics.py, operator.py, user.py, storage.py
+
+### Decision: Consent Endpoints Under Operator Router
+**Epic**: Epic 6  
+**Decision**: Consent grant/revoke endpoints are under `/api/operator/consent/*` rather than a separate `/api/consent/*` route.  
+**Rationale**: Consent changes trigger system actions (rec generation, soft delete) that are operator-level concerns. Keeps related endpoints together.  
+**Alternatives Considered**:
+- Separate consent router: Rejected as unnecessary complexity for 2 endpoints
+- User-facing consent endpoints: Rejected as users shouldn't directly call APIs in demo
+**Impact**: operator.py routing, frontend user.js API client paths
+
+### Decision: Sync Recommendation Generation on Consent Grant
+**Epic**: Epic 6  
+**Decision**: Recommendation generation triggered synchronously when consent is granted, but endpoint returns immediately with 202 Accepted.  
+**Rationale**: For demo, <5s generation time is acceptable. Avoids complexity of background job queue. User sees "check back soon" state briefly.  
+**Alternatives Considered**:
+- Full async with Celery/RQ: Rejected as over-engineered for demo
+- Block until complete: Rejected as poor UX if generation takes longer
+- Manual operator trigger only: Rejected as reduces demo "wow factor"
+**Impact**: operator.py consent/grant endpoint, user portal State B
+
+### Decision: No Persona Info for Non-Consented Users in Operator View
+**Epic**: Epic 6  
+**Decision**: Non-consented users visible in operator list but show "—" for persona, rec count, and last activity. View Details button disabled.  
+**Rationale**: Demonstrates consent-first principle even in operator view. In production, we wouldn't process data until consent granted.  
+**Alternatives Considered**:
+- Show computed persona but hide recs: Rejected as violates consent-first principle
+- Hide non-consented users entirely: Rejected as operator needs to know they exist
+- Show limited info: Accepted - show name and consent status only
+**Impact**: UserList.jsx component, operator UX
+
+### Decision: Default Route to User Portal
+**Epic**: Epic 6  
+**Decision**: Root path `/` redirects to `/user` (end user landing) instead of `/operator`. Operator accessible at `/operator`.  
+**Rationale**: Demo flow typically starts with end user experience, then shows operator oversight. Makes user experience primary.  
+**Alternatives Considered**:
+- Default to operator: Rejected as less intuitive demo flow
+- Dedicated home page with choice: Rejected as unnecessary click
+**Impact**: App.jsx routing, demo presentation flow
+
+### Decision: User Portal Three-State Design
+**Epic**: Epic 6  
+**Decision**: User portal shows exactly 3 states: (A) Non-consented with grant button, (B) Consented but no approved recs with "check back soon", (C) Full portal with insights and recommendations.  
+**Rationale**: Clearly demonstrates consent workflow and operator approval requirement. State B shows system is working but needs operator review.  
+**Alternatives Considered**:
+- Show generic templates in State B: Rejected per user preference for cleaner demo flow
+- Combine B and C: Rejected as loses clarity of approval workflow
+**Impact**: UserPortal.jsx state logic, user experience flow
+
+### Decision: Transaction Insights for End Users
+**Epic**: Epic 6  
+**Decision**: Added `/api/users/{user_id}/insights` endpoint that aggregates transactions by merchant and category. Provides engaging content for State C.  
+**Rationale**: Demonstrates value of data sharing. Shows system processes transaction data. Makes user portal more visually interesting.  
+**Alternatives Considered**:
+- Only show recommendations: Rejected as less engaging
+- Show full transaction history: Rejected as too much detail and privacy concern
+- Include balance trends: Deferred to future enhancement
+**Impact**: user.py insights endpoint, UserInsights.jsx component, user portal State C
+
+### Decision: Separate User API Module
+**Epic**: Epic 6  
+**Decision**: Created dedicated `backend/api/user.py` module for end user endpoints, separate from operator.py.  
+**Rationale**: Clear separation of concerns. Different access patterns and data visibility. Scales better if auth is added later.  
+**Alternatives Considered**:
+- Combined in operator.py: Rejected as file would become too large
+- Combined in main.py: Rejected as reduces modularity
+**Impact**: main.py router registration, API organization
+

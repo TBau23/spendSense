@@ -9,8 +9,17 @@ from pydantic import BaseModel
 from typing import Optional, List
 from pathlib import Path
 import json
+import logging
 
-from backend.guardrails.consent import check_consent, get_consented_users, ConsentError
+logger = logging.getLogger(__name__)
+
+from backend.guardrails.consent import (
+    check_consent,
+    get_consented_users,
+    grant_consent,
+    revoke_consent,
+    ConsentError
+)
 from backend.guardrails.metrics import (
     compute_operator_metrics,
     get_user_metrics,
@@ -21,6 +30,10 @@ from backend.recommend.approval import (
     flag_recommendation,
     get_user_recommendations,
     get_recommendation_with_items
+)
+from backend.recommend.management import (
+    generate_recommendation_for_user,
+    soft_delete_recommendation
 )
 from backend.recommend.traces import get_traces, get_latest_persona_traces
 from backend.storage.database import get_db_path
@@ -38,6 +51,10 @@ class ApprovalRequest(BaseModel):
 
 class FlagRequest(BaseModel):
     reviewer_notes: str
+
+
+class ConsentRequest(BaseModel):
+    user_id: str
 
 
 # ========== User Endpoints ==========
@@ -296,6 +313,137 @@ async def get_metrics(force_refresh: bool = Query(False, description="Bypass cac
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to compute metrics: {str(e)}")
+
+
+# ========== Consent Management Endpoints (Epic 6) ==========
+
+@router.post("/consent/grant")
+async def grant_user_consent(request: ConsentRequest):
+    """
+    Grant consent for a user
+    
+    Updates user consent status to true and triggers recommendation generation.
+    Returns 202 Accepted as generation happens asynchronously.
+    
+    Body:
+    - user_id: User identifier
+    """
+    try:
+        # Grant consent
+        grant_consent(request.user_id, DB_PATH)
+        
+        # Trigger recommendation generation
+        # Note: In production, this would be async/background task
+        # For demo, we'll trigger it but return immediately
+        try:
+            config_path = Path(__file__).parent.parent.parent / "config.json"
+            recommendation = generate_recommendation_for_user(
+                user_id=request.user_id,
+                db_path=DB_PATH,
+                config_path=str(config_path)
+            )
+            
+            return {
+                "message": "Consent granted and recommendation generation initiated",
+                "user_id": request.user_id,
+                "recommendation_id": recommendation.get('recommendation_id')
+            }
+            
+        except Exception as gen_error:
+            # Consent was granted, but generation failed
+            # This is acceptable - operator can manually generate later
+            logger.error(f"Failed to generate recommendation after consent grant: {gen_error}")
+            return {
+                "message": "Consent granted successfully, but recommendation generation failed",
+                "user_id": request.user_id,
+                "error": str(gen_error)
+            }
+        
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to grant consent: {str(e)}")
+
+
+@router.post("/consent/revoke")
+async def revoke_user_consent(request: ConsentRequest):
+    """
+    Revoke consent for a user
+    
+    Updates user consent status to false and soft deletes all recommendations.
+    
+    Body:
+    - user_id: User identifier
+    """
+    try:
+        revoke_consent(request.user_id, DB_PATH)
+        
+        return {
+            "message": "Consent revoked successfully",
+            "user_id": request.user_id
+        }
+        
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to revoke consent: {str(e)}")
+
+
+# ========== Recommendation Management Endpoints (Epic 6) ==========
+
+@router.post("/users/{user_id}/generate")
+async def generate_recommendation(user_id: str):
+    """
+    Generate a new recommendation for a user on-demand
+    
+    Triggers the full recommendation generation pipeline.
+    New recommendation will have PENDING_REVIEW status.
+    
+    Returns 201 Created with the new recommendation
+    """
+    try:
+        config_path = Path(__file__).parent.parent.parent / "config.json"
+        recommendation = generate_recommendation_for_user(
+            user_id=user_id,
+            db_path=DB_PATH,
+            config_path=str(config_path)
+        )
+        
+        return {
+            "message": "Recommendation generated successfully",
+            "recommendation": recommendation
+        }
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate recommendation: {str(e)}")
+
+
+@router.delete("/recommendations/{rec_id}")
+async def delete_recommendation(rec_id: str):
+    """
+    Soft delete a recommendation
+    
+    Sets recommendation status to DELETED, preserving it for audit trail
+    but filtering it out from all queries.
+    
+    Returns 204 No Content on success
+    """
+    try:
+        soft_delete_recommendation(rec_id, DB_PATH)
+        
+        return {
+            "message": "Recommendation deleted successfully",
+            "recommendation_id": rec_id
+        }
+        
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete recommendation: {str(e)}")
 
 
 # ========== Health Check ==========

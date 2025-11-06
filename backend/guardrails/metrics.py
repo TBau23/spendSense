@@ -49,14 +49,15 @@ def compute_operator_metrics(db_path: str, force_refresh: bool = False) -> Dict[
         cursor.execute("SELECT COUNT(*) as count FROM users WHERE consent_status = 1")
         total_consented_users = cursor.fetchone()['count']
         
-        # Total recommendations generated
-        cursor.execute("SELECT COUNT(*) as count FROM recommendations")
+        # Total recommendations generated (exclude DELETED)
+        cursor.execute("SELECT COUNT(*) as count FROM recommendations WHERE status != 'DELETED'")
         total_recommendations = cursor.fetchone()['count']
         
-        # Recommendation counts by status
+        # Recommendation counts by status (exclude DELETED)
         cursor.execute("""
             SELECT status, COUNT(*) as count 
             FROM recommendations 
+            WHERE status != 'DELETED'
             GROUP BY status
         """)
         status_counts = {row['status']: row['count'] for row in cursor.fetchall()}
@@ -69,7 +70,7 @@ def compute_operator_metrics(db_path: str, force_refresh: bool = False) -> Dict[
         cursor.execute("""
             SELECT COUNT(DISTINCT user_id) as count 
             FROM recommendations 
-            WHERE status = 'PENDING_REVIEW'
+            WHERE status = 'PENDING_REVIEW' AND status != 'DELETED'
         """)
         users_with_pending = cursor.fetchone()['count']
         
@@ -295,7 +296,9 @@ def get_user_list_with_status(
     sort_by: str = 'name'
 ) -> list:
     """
-    Get list of consented users with recommendation status info
+    Get list of ALL users (consented + non-consented) with recommendation status info
+    
+    Epic 6 update: Now returns all users to support showing non-consented users in operator view.
     
     Used by operator dashboard main page for user list.
     
@@ -306,30 +309,31 @@ def get_user_list_with_status(
         sort_by: Sort order ('name', 'date', 'persona')
         
     Returns:
-        List of user dictionaries with status information
+        List of user dictionaries with status information and consent status
     """
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     
     try:
-        # Build query - compute all status counts first, then filter in WHERE clause
+        # Build query - compute all status counts first, filter non-DELETED recs
         query = """
             SELECT 
                 u.user_id,
                 u.name,
+                u.consent_status,
                 pa.primary_persona_id,
                 pa.primary_persona_name,
-                COUNT(DISTINCT r.recommendation_id) as rec_count,
+                COUNT(DISTINCT CASE WHEN r.status != 'DELETED' THEN r.recommendation_id END) as rec_count,
                 SUM(CASE WHEN r.status = 'PENDING_REVIEW' THEN 1 ELSE 0 END) as pending_count,
                 SUM(CASE WHEN r.status = 'APPROVED' THEN 1 ELSE 0 END) as approved_count,
                 SUM(CASE WHEN r.status = 'FLAGGED' THEN 1 ELSE 0 END) as flagged_count,
-                MAX(r.generated_at) as last_rec_date
+                MAX(CASE WHEN r.status != 'DELETED' THEN r.generated_at END) as last_rec_date
             FROM users u
             LEFT JOIN persona_assignments pa 
                 ON u.user_id = pa.user_id AND pa.window_days = 30
             LEFT JOIN recommendations r 
                 ON u.user_id = r.user_id
-            WHERE u.consent_status = 1
+            WHERE 1=1
         """
         
         params = []
@@ -340,7 +344,7 @@ def get_user_list_with_status(
             params.append(persona_filter)
         
         # Group by user first
-        query += " GROUP BY u.user_id, u.name, pa.primary_persona_id, pa.primary_persona_name"
+        query += " GROUP BY u.user_id, u.name, u.consent_status, pa.primary_persona_id, pa.primary_persona_name"
         
         # Apply status filter in HAVING clause (after aggregation)
         if status_filter:
@@ -367,17 +371,19 @@ def get_user_list_with_status(
             users.append({
                 'user_id': row['user_id'],
                 'name': row['name'],
+                'consent_status': bool(row['consent_status']),
                 'primary_persona_id': row['primary_persona_id'],
                 'primary_persona_name': row['primary_persona_name'],
                 'rec_count': row['rec_count'] or 0,
                 'has_pending_recs': (row['pending_count'] or 0) > 0,
+                'has_approved_recs': (row['approved_count'] or 0) > 0,
                 'pending_count': row['pending_count'] or 0,
                 'approved_count': row['approved_count'] or 0,
                 'flagged_count': row['flagged_count'] or 0,
                 'last_rec_date': row['last_rec_date']
             })
         
-        logger.info(f"Retrieved {len(users)} users with filters: persona={persona_filter}, status={status_filter}")
+        logger.info(f"Retrieved {len(users)} users (all, including non-consented) with filters: persona={persona_filter}, status={status_filter}")
         return users
         
     finally:
