@@ -225,11 +225,11 @@ const UserPortal = () => {
               </div>
               
               <h2 className="waiting-heading">
-                Your Recommendations Are Being Prepared
+                Your Recommendations Are In Review
               </h2>
               <p className="waiting-description">
-                Our team is analyzing your financial data and preparing personalized educational content for you. 
-                This usually takes just a few moments.
+                Thank you for granting consent! Our team is carefully reviewing your personalized recommendations to ensure 
+                they're accurate and helpful. We'll notify you when they're ready.
               </p>
               
               {/* Info Box */}
@@ -240,24 +240,17 @@ const UserPortal = () => {
                 <div className="info-box-content">
                   <p className="info-box-title">What's happening now?</p>
                   <ul className="info-box-list">
-                    <li>Analyzing your spending patterns</li>
-                    <li>Identifying personalized insights</li>
-                    <li>Curating educational content</li>
-                    <li>Preparing recommendations for review</li>
+                    <li>✓ Your spending patterns have been analyzed</li>
+                    <li>✓ Personalized insights have been identified</li>
+                    <li>✓ Educational content has been curated</li>
+                    <li>⏳ Our team is reviewing your recommendations</li>
                   </ul>
                 </div>
               </div>
 
-              {/* Action Button */}
-              <button
-                onClick={loadUserData}
-                className="refresh-button-modern"
-              >
-                <span className="refresh-icon">
-                  <RefreshCw size={20} strokeWidth={2.5} />
-                </span>
-                Refresh Now
-              </button>
+              <p className="check-back-message">
+                Check back soon to see your personalized financial education content!
+              </p>
 
               {/* Consent Management */}
               <div className="consent-section-waiting">
