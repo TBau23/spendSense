@@ -5,6 +5,7 @@
  */
 
 import React, { useState } from 'react';
+import { AlertTriangle, Trash2, Pause, Lock, Info } from 'lucide-react';
 import { grantConsent, revokeConsent } from '../api/user';
 
 const ConsentToggle = ({ userId, currentConsent, onConsentChange }) => {
@@ -67,7 +68,9 @@ const ConsentToggle = ({ userId, currentConsent, onConsentChange }) => {
             <div className="revoke-modal" onClick={(e) => e.stopPropagation()}>
               {/* Warning Icon */}
               <div className="revoke-modal-icon">
-                <div className="revoke-icon-circle">⚠️</div>
+                <div className="revoke-icon-circle">
+                  <AlertTriangle size={40} strokeWidth={2.5} />
+                </div>
               </div>
               
               {/* Modal Header */}
@@ -83,22 +86,30 @@ const ConsentToggle = ({ userId, currentConsent, onConsentChange }) => {
                 <p className="revoke-modal-description">This will:</p>
                 <div className="revoke-consequences">
                   <div className="revoke-consequence-item">
-                    <span className="revoke-consequence-icon">🗑️</span>
+                    <span className="revoke-consequence-icon">
+                      <Trash2 size={20} strokeWidth={2} />
+                    </span>
                     <span className="revoke-consequence-text">Remove all your personalized recommendations</span>
                   </div>
                   <div className="revoke-consequence-item">
-                    <span className="revoke-consequence-icon">⏸️</span>
+                    <span className="revoke-consequence-icon">
+                      <Pause size={20} strokeWidth={2} />
+                    </span>
                     <span className="revoke-consequence-text">Stop processing your financial data</span>
                   </div>
                   <div className="revoke-consequence-item">
-                    <span className="revoke-consequence-icon">🔒</span>
+                    <span className="revoke-consequence-icon">
+                      <Lock size={20} strokeWidth={2} />
+                    </span>
                     <span className="revoke-consequence-text">Hide your insights and analysis</span>
                   </div>
                 </div>
                 
                 {/* Info Notice */}
                 <div className="revoke-modal-notice">
-                  <span className="revoke-notice-icon">ℹ️</span>
+                  <span className="revoke-notice-icon">
+                    <Info size={20} strokeWidth={2} />
+                  </span>
                   <span className="revoke-notice-text">
                     You can grant consent again at any time to resume receiving personalized content.
                   </span>

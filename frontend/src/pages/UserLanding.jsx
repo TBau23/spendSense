@@ -119,7 +119,9 @@ const UserLanding = () => {
           {/* Footer Disclaimer */}
           <div className="landing-footer">
             <div className="disclaimer-badge">
-              <span className="disclaimer-icon">ℹ️</span>
+              <span className="disclaimer-icon">
+                <Info size={24} strokeWidth={2} />
+              </span>
               <div className="disclaimer-content">
                 <p className="disclaimer-title">Educational Content Only</p>
                 <p className="disclaimer-text">

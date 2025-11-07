@@ -2143,6 +2143,10 @@ body {
 .recommendations-icon {
   font-size: 2rem;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  color: #0f766e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .recommendations-disclaimer {
@@ -2361,6 +2365,10 @@ body {
   font-size: 4rem;
   animation: floatAnimation 3s ease-in-out infinite;
   filter: drop-shadow(0 4px 8px rgba(15, 118, 110, 0.3));
+  color: #0f766e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @keyframes floatAnimation {
@@ -2403,6 +2411,10 @@ body {
 
 .label-icon {
   font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0f766e;
 }
 
 .select-wrapper {
@@ -2506,6 +2518,10 @@ body {
 .error-icon {
   font-size: 3rem;
   margin-bottom: var(--space-3);
+  color: #DC2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .error-text {
@@ -2551,6 +2567,10 @@ body {
 .disclaimer-icon {
   font-size: 1.5rem;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f59e0b;
 }
 
 .disclaimer-content {
@@ -2711,6 +2731,10 @@ body {
   font-size: 3.5rem;
   animation: rotateIcon 3s linear infinite;
   filter: drop-shadow(0 4px 8px rgba(15, 118, 110, 0.3));
+  color: #0f766e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @keyframes rotateIcon {
@@ -2765,6 +2789,10 @@ body {
   font-size: 2rem;
   flex-shrink: 0;
   animation: sparkle 2s ease-in-out infinite;
+  color: #0f766e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @keyframes sparkle {
@@ -2833,7 +2861,9 @@ body {
 }
 
 .refresh-icon {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   animation: spin 2s linear infinite;
 }
 
@@ -2935,6 +2965,7 @@ body {
   border: 3px solid #FCA5A5;
   animation: iconPulse 2s ease-in-out infinite;
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+  color: #DC2626;
 }
 
 @keyframes iconPulse {
@@ -3011,6 +3042,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #DC2626;
 }
 
 .revoke-consequence-text {
@@ -3036,6 +3068,10 @@ body {
 .revoke-notice-icon {
   font-size: 1.25rem;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3B82F6;
 }
 
 .revoke-notice-text {
@@ -3255,6 +3291,10 @@ body {
   z-index: 1;
   animation: lockFloat 3s ease-in-out infinite;
   filter: drop-shadow(0 4px 12px rgba(15, 118, 110, 0.4));
+  color: #0f766e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @keyframes lockFloat {
@@ -3407,6 +3447,10 @@ body {
 
 .privacy-icon {
   font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #10b981;
 }
 
 /* Responsive Design */

@@ -9,6 +9,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Lock, Clock, Sparkles, ShieldCheck, RefreshCw, Lightbulb, Info } from 'lucide-react';
 import { fetchUser, fetchUserRecommendations, fetchUserInsights } from '../api/user';
 import UserInsights from '../components/UserInsights';
 import RecommendationCard from '../components/RecommendationCard';
@@ -134,7 +135,9 @@ const UserPortal = () => {
               {/* Lock Icon with Animation */}
               <div className="consent-icon-container">
                 <div className="consent-glow"></div>
-                <div className="consent-lock-icon">🔒</div>
+                <div className="consent-lock-icon">
+                  <Lock size={60} strokeWidth={2.5} />
+                </div>
               </div>
               
               <h2 className="consent-heading">
@@ -179,7 +182,9 @@ const UserPortal = () => {
 
               {/* Privacy Notice */}
               <p className="privacy-notice">
-                <span className="privacy-icon">🔐</span>
+                <span className="privacy-icon">
+                  <ShieldCheck size={20} strokeWidth={2} />
+                </span>
                 You can revoke consent at any time. We respect your privacy and data rights.
               </p>
             </div>
@@ -214,7 +219,9 @@ const UserPortal = () => {
                 <div className="waiting-circle pulse-1"></div>
                 <div className="waiting-circle pulse-2"></div>
                 <div className="waiting-circle pulse-3"></div>
-                <div className="waiting-icon">⏳</div>
+                <div className="waiting-icon">
+                  <Clock size={56} strokeWidth={2.5} />
+                </div>
               </div>
               
               <h2 className="waiting-heading">
@@ -227,7 +234,9 @@ const UserPortal = () => {
               
               {/* Info Box */}
               <div className="info-box-waiting">
-                <div className="info-box-icon">✨</div>
+                <div className="info-box-icon">
+                  <Sparkles size={32} strokeWidth={2} />
+                </div>
                 <div className="info-box-content">
                   <p className="info-box-title">What's happening now?</p>
                   <ul className="info-box-list">
@@ -244,7 +253,9 @@ const UserPortal = () => {
                 onClick={loadUserData}
                 className="refresh-button-modern"
               >
-                <span className="refresh-icon">🔄</span>
+                <span className="refresh-icon">
+                  <RefreshCw size={20} strokeWidth={2.5} />
+                </span>
                 Refresh Now
               </button>
 
@@ -291,11 +302,15 @@ const UserPortal = () => {
         <div className="recommendations-section">
           <div className="recommendations-header">
             <h2 className="recommendations-section-title">
-              <span className="recommendations-icon">💡</span>
+              <span className="recommendations-icon">
+                <Lightbulb size={32} strokeWidth={2.5} />
+              </span>
               Your Recommendations
             </h2>
             <div className="recommendations-disclaimer">
-              <span className="disclaimer-icon">ℹ️</span>
+              <span className="disclaimer-icon">
+                <Info size={20} strokeWidth={2} />
+              </span>
               This is educational content, not financial advice. Consult a licensed advisor for personalized guidance.
             </div>
           </div>
