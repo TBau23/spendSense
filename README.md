@@ -1,24 +1,6 @@
-# SpendSense
-
 **From Plaid to Personalized Learning**
 
 An explainable, consent-aware system that detects behavioral patterns from transaction data, assigns personas, and delivers personalized financial education with clear guardrails.
-
----
-
-## Project Overview
-
-SpendSense demonstrates how financial institutions can turn transaction data into actionable customer insights while maintaining transparency and respecting user consent. The system:
-
-- Generates synthetic Plaid-style transaction data for 50-100 users
-- Detects behavioral signals (subscriptions, savings patterns, credit usage, income stability, cash flow stress)
-- Assigns users to personas based on detected behaviors
-- Generates personalized financial education recommendations with clear rationales
-- Provides operator dashboard for human-in-the-loop recommendation review
-
-**Key Principle**: Transparency over sophistication. Every recommendation includes a plain-language "because" that cites specific data.
-
----
 
 ## Technology Stack
 
@@ -241,31 +223,11 @@ Key settings in `config.json`:
 - **Explainable**: Every recommendation cites specific user data
 - **Tone Controls**: Manual review ensures empowering, non-judgmental language
 
----
 
-## Current Status
-
-**Completed Epics**:
-- ✅ Epic 1: Data Foundation (synthetic data, 90/10 consent split)
-- ✅ Epic 2: Feature Engineering (5 signal types, 30d/180d windows)
-- ✅ Epic 3: Persona System (5 personas, priority-based assignment)
-- ✅ Epic 4: Recommendation Engine (LLM rationales, eligibility checks)
-- ✅ Epic 5: Guardrails & Operator View (React dashboard, approval workflow)
-
-**Next**:
-- Epic 6: Evaluation & Polish (metrics, documentation, tests)
-
----
 
 ## License
 
 Demo project for educational purposes.
-
----
-
-## Disclaimer
-
-**This is not financial advice.** SpendSense is a demonstration project showing how financial institutions can responsibly process transaction data. Consult a licensed financial advisor for personalized guidance.
 
 ---
 
