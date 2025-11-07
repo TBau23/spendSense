@@ -4,20 +4,14 @@
  * Displays filterable table of users with recommendation status
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const UserList = ({ users, onFilterChange }) => {
+const UserList = ({ users, filters, onFilterChange }) => {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState({
-    persona: '',
-    status: '',
-    sort: 'name'
-  });
 
   const handleFilterChange = (key, value) => {
     const newFilters = { ...filters, [key]: value };
-    setFilters(newFilters);
     onFilterChange(newFilters);
   };
 
@@ -152,5 +146,5 @@ const UserList = ({ users, onFilterChange }) => {
   );
 };
 
-export default UserList;
+export default React.memo(UserList);
 

@@ -278,18 +278,18 @@ def get_archetype_distribution(total_users: int) -> Dict[str, int]:
     Returns:
         Dictionary mapping archetype name to count
     """
-    # Target proportions from technical design
+    # Target proportions - rebalanced to improve underrepresented personas
     proportions = {
-        "high_utilizer": 0.24,              # 18/75
-        "variable_income": 0.16,             # 12/75
-        "subscription_heavy": 0.16,          # 12/75
-        "savings_builder": 0.16,             # 12/75
-        "cash_flow_stressed": 0.13,          # 10/75
+        "high_utilizer": 0.20,              # 15/75 (reduced from 24%)
+        "variable_income": 0.20,             # 15/75 (increased from 16%)
+        "subscription_heavy": 0.12,          # 9/75 (reduced from 16%)
+        "savings_builder": 0.16,             # 12/75 (unchanged)
+        "cash_flow_stressed": 0.16,          # 12/75 (increased from 13%)
         "high_util_cash_stressed": 0.05,     # 4/75 (part of multi-persona)
         "variable_income_subscriptions": 0.05,  # 4/75 (part of multi-persona)
         "stable_finances": 0.08,             # 6/75
         "edge_high_util_threshold": 0.02,    # 2/75
-        "edge_subscription_threshold": 0.02, # 2/75
+        "edge_subscription_threshold": 0.01, # 1/75 (reduced)
         "edge_cash_flow_threshold": 0.02,    # 2/75
         "edge_no_transactions": 0.01,        # 1/75
         "edge_no_credit": 0.01,              # 1/75

@@ -260,7 +260,7 @@ def generate_user_transactions(
     
     # Calculate monthly expense target based on archetype
     if archetype.target_low_balance_days_pct > 0.25:  # Cash flow stressed
-        monthly_expense_target = avg_income * 0.95  # Spend almost everything
+        monthly_expense_target = avg_income * 0.98  # Spend almost everything (increased from 0.95)
     elif archetype.savings_behavior in ["aggressive", "consistent"]:  # Savings builder
         monthly_expense_target = avg_income * 0.60  # Save 40%
     else:  # Normal/stable
@@ -273,33 +273,67 @@ def generate_user_transactions(
     # Generate transactions chronologically
     current_date = start_date
     payroll_index = 0
+    # Subscription setup - add variance to prevent perfect monthly cadence
     subscription_day_of_month = random.randint(1, 28)
-    rent_due_day = random.randint(1, 5)  # Rent due in first 5 days of month
+    subscription_day_variance = random.randint(-2, 2)  # ±2 days variation
+    last_subscription_month = None
+    
+    # Rent setup - add variance to prevent universal recurring pattern
+    rent_due_day = random.randint(1, 28)  # Wider range: 1-28 instead of 1-5
+    rent_day_variance = random.randint(-3, 3)  # Allow ±3 days variation each month
+    use_rent_as_transfer = random.random() < 0.3  # 30% use direct debit (not merchant)
     last_rent_month = None  # Track last month rent was paid
+    
+    # Utility setup - make less uniform to reduce false subscriptions
+    has_electric = random.random() < 0.85  # 85% have electric bill
+    has_internet = random.random() < 0.90  # 90% have internet
+    has_water = random.random() < 0.70  # 70% have water bill
+    utility_day = random.randint(10, 25)  # Random day between 10-25
+    utility_day_variance = random.randint(-4, 4)  # ±4 days variation
+    utility_frequency = random.choice(['monthly', 'bimonthly', 'quarterly'])  # Not always monthly
+    last_utility_month = None
     
     while current_date <= end_date:
         # Check if it's a payroll date
         if payroll_index < len(payroll_dates) and current_date == payroll_dates[payroll_index]:
-            # Payroll deposit
-            payroll_amount = avg_income * random.uniform(0.95, 1.05)
+            # Payroll deposit - vary amount based on income variability
+            if archetype.payroll_variability > 0.5:  # Variable income (Persona 2)
+                # High variability: income can vary ±30-50% month-to-month
+                payroll_amount = avg_income * random.uniform(0.5, 1.5)
+            else:
+                # Stable income: normal ±5% variance
+                payroll_amount = avg_income * random.uniform(0.95, 1.05)
+            
             generate_payroll_transaction(checking_id, user_id, current_date, payroll_amount, conn)
             current_balance += payroll_amount
             transaction_count += 1
             payroll_index += 1
         
-        # Pay rent/mortgage on due day each month (mandatory!)
-        if current_date.day == rent_due_day and last_rent_month != current_date.month:
-            generate_expense_transaction(
-                checking_id, user_id, current_date,
-                "Rent Payment", monthly_rent,
-                "LOAN_PAYMENTS", "Rent", conn
-            )
+        # Pay rent/mortgage on due day each month (mandatory, but with variance!)
+        # Apply variance to prevent perfect monthly cadence
+        effective_rent_day = max(1, min(28, rent_due_day + (rent_day_variance if last_rent_month else 0)))
+        
+        if current_date.day == effective_rent_day and last_rent_month != current_date.month:
+            if use_rent_as_transfer:
+                # Direct debit / ACH transfer (not a merchant transaction)
+                generate_transfer_transaction(checking_id, user_id, current_date, monthly_rent, False, conn)
+            else:
+                # Traditional rent payment to merchant
+                generate_expense_transaction(
+                    checking_id, user_id, current_date,
+                    "Rent Payment", monthly_rent,
+                    "LOAN_PAYMENTS", "Rent", conn
+                )
             current_balance -= monthly_rent
             transaction_count += 1
             last_rent_month = current_date.month
+            # Refresh variance for next month
+            rent_day_variance = random.randint(-3, 3)
         
-        # Subscriptions (monthly on specific day)
-        if current_date.day == subscription_day_of_month:
+        # Subscriptions (monthly on specific day, with slight variance)
+        effective_sub_day = max(1, min(28, subscription_day_of_month + (subscription_day_variance if last_subscription_month else 0)))
+        
+        if current_date.day == effective_sub_day and last_subscription_month != current_date.month:
             for merchant, amount, category_primary, category_detailed in user_subscriptions:
                 generate_expense_transaction(
                     checking_id, user_id, current_date,
@@ -307,9 +341,18 @@ def generate_user_transactions(
                 )
                 current_balance -= amount
                 transaction_count += 1
+            last_subscription_month = current_date.month
+            # Refresh variance for next month (slight date drift is realistic)
+            subscription_day_variance = random.randint(-2, 2)
         
         # Regular expenses (groceries, dining, gas, etc.) - random days
-        if random.random() < 0.6:  # 60% chance of expense each day (increased from 30%)
+        # Cash flow stressed users have more frequent, smaller transactions
+        if archetype.target_low_balance_days_pct > 0.25:
+            expense_probability = 0.75  # 75% chance (more frequent for cash stressed)
+        else:
+            expense_probability = 0.6  # 60% chance (normal)
+        
+        if random.random() < expense_probability:
             merchant_data = random.choice([m for m in EXPENSE_MERCHANTS if m[0] not in ["Rent Payment", "Electric Company", "Internet Provider", "Water Utility"]])
             merchant, amount_range, category_primary, category_detailed = merchant_data
             
@@ -334,19 +377,46 @@ def generate_user_transactions(
             
             transaction_count += 1
         
-        # Utilities (monthly on specific days)
-        if current_date.day == 15:  # Mid-month utilities
-            for utility in ["Electric Company", "Internet Provider", "Water Utility"]:
-                merchant_data = next(m for m in EXPENSE_MERCHANTS if m[0] == utility)
-                _, amount_range, category_primary, category_detailed = merchant_data
-                amount = random.uniform(*amount_range)
+        # Utilities (variable frequency and dates to reduce false subscriptions)
+        effective_utility_day = max(1, min(28, utility_day + (utility_day_variance if last_utility_month else 0)))
+        
+        # Only process utilities on the right day
+        if current_date.day == effective_utility_day and last_utility_month != current_date.month:
+            # Check frequency - only process if appropriate
+            months_since_start = (current_date.year - start_date.year) * 12 + (current_date.month - start_date.month)
+            
+            should_process = False
+            if utility_frequency == 'monthly':
+                should_process = True
+            elif utility_frequency == 'bimonthly' and months_since_start % 2 == 0:
+                should_process = True
+            elif utility_frequency == 'quarterly' and months_since_start % 3 == 0:
+                should_process = True
+            
+            if should_process:
+                utilities_to_process = []
+                if has_electric:
+                    utilities_to_process.append("Electric Company")
+                if has_internet:
+                    utilities_to_process.append("Internet Provider")
+                if has_water:
+                    utilities_to_process.append("Water Utility")
                 
-                generate_expense_transaction(
-                    checking_id, user_id, current_date,
-                    utility, amount, category_primary, category_detailed, conn
-                )
-                current_balance -= amount
-                transaction_count += 1
+                for utility in utilities_to_process:
+                    merchant_data = next(m for m in EXPENSE_MERCHANTS if m[0] == utility)
+                    _, amount_range, category_primary, category_detailed = merchant_data
+                    amount = random.uniform(*amount_range)
+                    
+                    generate_expense_transaction(
+                        checking_id, user_id, current_date,
+                        utility, amount, category_primary, category_detailed, conn
+                    )
+                    current_balance -= amount
+                    transaction_count += 1
+                
+                last_utility_month = current_date.month
+                # Refresh variance for next billing cycle
+                utility_day_variance = random.randint(-4, 4)
         
         # Savings transfers (for savings builders)
         if savings_id and archetype.savings_behavior in ["consistent", "aggressive"]:

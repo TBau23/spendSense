@@ -225,8 +225,8 @@ def evaluate_persona_5(features: Dict) -> Tuple[bool, float, Dict]:
     Persona 5: Cash Flow Stressed
     
     Criteria (ALL of):
-    - Checking balance <$100 on ≥30% of days in window
-    - Balance volatility > 1.0 (std_dev > mean)
+    - Checking balance <$100 on ≥20% of days in window (adjusted from 30%)
+    - Balance volatility > 0.15 (adjusted from 1.0 for low-balance accounts)
     
     Args:
         features: Dict containing cash_flow features
@@ -240,8 +240,8 @@ def evaluate_persona_5(features: Dict) -> Tuple[bool, float, Dict]:
     balance_volatility = cash_flow.get('balance_volatility', 0.0)
     
     # Check criteria (ALL conditions must be true)
-    low_balance_frequent = pct_days_below >= 0.30
-    volatility_high = balance_volatility > 1.0
+    low_balance_frequent = pct_days_below >= 0.20  # Lowered from 0.30 to 0.20
+    volatility_high = balance_volatility > 0.15  # Lowered from 1.0 to 0.15
     
     matched = low_balance_frequent and volatility_high
     
@@ -255,9 +255,9 @@ def evaluate_persona_5(features: Dict) -> Tuple[bool, float, Dict]:
     details = {
         'criteria': {
             'pct_days_below_100': pct_days_below,
-            'threshold_pct': 0.30,
+            'threshold_pct': 0.20,  # Updated from 0.30 to 0.20
             'balance_volatility': balance_volatility,
-            'threshold_volatility': 1.0
+            'threshold_volatility': 0.15  # Updated threshold
         },
         'triggered_by': triggers
     }

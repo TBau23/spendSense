@@ -4,7 +4,7 @@
  * Main operator view: metrics + user list with filtering
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import MetricsPanel from '../components/MetricsPanel';
 import UserList from '../components/UserList';
 import { fetchMetrics, fetchUsers } from '../api/operator';
@@ -59,9 +59,9 @@ const OperatorDashboard = () => {
     }
   };
 
-  const handleFilterChange = (newFilters) => {
+  const handleFilterChange = useCallback((newFilters) => {
     setFilters(newFilters);
-  };
+  }, []);
 
   const handleRefresh = () => {
     loadMetrics();
@@ -94,7 +94,11 @@ const OperatorDashboard = () => {
         {loading ? (
           <div className="loading">Loading users...</div>
         ) : (
-          <UserList users={users} onFilterChange={handleFilterChange} />
+          <UserList 
+            users={users} 
+            filters={filters}
+            onFilterChange={handleFilterChange} 
+          />
         )}
       </div>
     </div>

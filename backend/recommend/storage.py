@@ -43,6 +43,11 @@ def create_recommendation_tables(db_path: str):
             actionable_item_count INTEGER DEFAULT 0,
             partner_offer_count INTEGER DEFAULT 0,
             
+            -- Approval workflow (Epic 5)
+            status TEXT DEFAULT 'PENDING_REVIEW',
+            reviewed_at TIMESTAMP NULL,
+            reviewer_notes TEXT NULL,
+            
             FOREIGN KEY (user_id) REFERENCES users(user_id)
         )
     ''')

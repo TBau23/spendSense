@@ -28,7 +28,10 @@
   },
   "features": {
     "output_dir": "data/features",
-    "windows": [30, 180],
+    "windows": [
+      30,
+      180
+    ],
     "as_of_date": null,
     "subscription_gap_tolerance_days": 2,
     "subscription_cadence_threshold": 0.7,
@@ -36,11 +39,14 @@
   },
   "personas": {
     "output_parquet": "data/features/persona_assignments.parquet",
-    "windows": [30, 180],
+    "windows": [
+      30,
+      180
+    ],
     "as_of_date": null,
     "thresholds": {
       "persona_1": {
-        "utilization_threshold": 0.50
+        "utilization_threshold": 0.5
       },
       "persona_2": {
         "pay_gap_days_threshold": 45,
@@ -49,15 +55,15 @@
       "persona_3": {
         "recurring_merchant_count_threshold": 3,
         "monthly_spend_threshold": 50.0,
-        "subscription_share_threshold": 0.10
+        "subscription_share_threshold": 0.1
       },
       "persona_4": {
         "growth_rate_threshold": 0.02,
         "net_inflow_monthly_threshold": 200.0,
-        "max_utilization_threshold": 0.30
+        "max_utilization_threshold": 0.3
       },
       "persona_5": {
-        "pct_days_below_100_threshold": 0.30,
+        "pct_days_below_100_threshold": 0.3,
         "balance_volatility_threshold": 1.0
       }
     }
@@ -107,4 +113,3 @@
     "max_page_size": 200
   }
 }
-
