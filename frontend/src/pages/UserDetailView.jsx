@@ -23,6 +23,7 @@ const UserDetailView = () => {
   const [showMetrics, setShowMetrics] = useState(true);
   const [showTraces, setShowTraces] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [refreshingRecs, setRefreshingRecs] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -51,18 +52,35 @@ const UserDetailView = () => {
     }
   };
 
+  const refreshRecommendations = async () => {
+    // Silently refresh only recommendations (no loading spinner, no unmount)
+    setRefreshingRecs(true);
+    try {
+      const recsData = await fetchUserRecommendations(userId);
+      setRecommendations(recsData.recommendations || []);
+      
+      // Also refresh traces since they're tied to recommendations
+      const tracesData = await fetchTraces(userId);
+      setTraces(tracesData.traces || []);
+    } catch (err) {
+      console.error('Failed to refresh recommendations:', err);
+      // Silent failure - don't disrupt the UI
+    } finally {
+      setRefreshingRecs(false);
+    }
+  };
+
   const handleRecommendationUpdate = () => {
-    // Reload data after approval/flag action
-    loadUserData();
+    // Smoothly refresh recommendations after approval/flag/delete
+    refreshRecommendations();
   };
 
   const handleGenerateRecommendation = async () => {
     setGenerating(true);
     try {
       await generateRecommendation(userId);
-      // Success - reload data to show new recommendation
-      await loadUserData();
-      alert('Recommendation generated successfully!');
+      // Success - smoothly refresh recommendations
+      await refreshRecommendations();
     } catch (err) {
       console.error('Failed to generate recommendation:', err);
       alert(`Failed to generate recommendation: ${err.message}`);
@@ -149,7 +167,21 @@ const UserDetailView = () => {
 
       {/* Main Content: Recommendations */}
       <div className="recommendations-container">
-        <h2>Recommendations ({recommendations.length})</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <h2>Recommendations ({recommendations.length})</h2>
+          {refreshingRecs && (
+            <span style={{ 
+              fontSize: '14px', 
+              color: '#6b7280', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px' 
+            }}>
+              <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></span>
+              Updating...
+            </span>
+          )}
+        </div>
         {recommendations.length === 0 ? (
           <div className="no-recommendations">
             <p>No recommendations generated for this user yet.</p>

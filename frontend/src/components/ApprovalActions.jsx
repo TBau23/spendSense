@@ -78,14 +78,6 @@ const ApprovalActions = ({ recommendationId, onUpdate }) => {
         >
           Flag
         </button>
-
-        <button 
-          className="btn btn-secondary"
-          disabled
-          title="Coming in Epic 6"
-        >
-          Override (Coming Soon)
-        </button>
       </div>
 
       {/* Flag Modal */}

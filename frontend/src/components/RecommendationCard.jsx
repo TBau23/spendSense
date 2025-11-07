@@ -6,6 +6,7 @@
  */
 
 import React, { useState } from 'react';
+import { Trash2 } from 'lucide-react';
 import ApprovalActions from './ApprovalActions';
 import UserSnapshot from './UserSnapshot';
 import { deleteRecommendation } from '../api/operator';
@@ -69,10 +70,6 @@ const RecommendationCard = ({ recommendation, onUpdate, hideOperatorActions = fa
 
   const handleDelete = async (e) => {
     e.stopPropagation(); // Prevent card expansion
-    
-    if (!window.confirm('Are you sure you want to delete this recommendation? This action cannot be undone.')) {
-      return;
-    }
 
     setDeleting(true);
     try {
@@ -124,7 +121,11 @@ const RecommendationCard = ({ recommendation, onUpdate, hideOperatorActions = fa
               disabled={deleting}
               title="Delete this recommendation"
             >
-              {deleting ? '⏳' : '🗑️'}
+              {deleting ? (
+                <span className="inline-block animate-spin">⏳</span>
+              ) : (
+                <Trash2 size={18} strokeWidth={2} />
+              )}
             </button>
           )}
           <button className="expand-btn">{expanded ? '▼' : '▶'}</button>
@@ -180,12 +181,6 @@ const RecommendationCard = ({ recommendation, onUpdate, hideOperatorActions = fa
                           <strong>Because:</strong>
                           <p>{item.action_rationale}</p>
                         </div>
-                      )}
-                      {item.data_cited && (
-                        <details className="data-cited">
-                          <summary>Data Cited</summary>
-                          <pre>{JSON.stringify(JSON.parse(item.data_cited), null, 2)}</pre>
-                        </details>
                       )}
                     </div>
                   )}

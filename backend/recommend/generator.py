@@ -304,33 +304,46 @@ def generate_recommendation(
     
     # Note: "Why" generation removed for polish - user snapshot replaces redundant rationales
     
-    # 4. Generate actionable items (LLM)
-    print("\n4. Generating actionable items...")
+    # 4 & 5. Generate actionable items + partner offers IN PARALLEL (major speed boost)
+    print("\n4-5. Generating actionable items and partner offers in parallel...")
     action_count = rec_config.get('content_selection', {}).get('actionable_items_max', 3)
-    actionable_items = generate_actionable_items_for_user(
-        persona_context,
-        features,
-        count=action_count,
-        llm_config=llm_config
-    )
-    print(f"   Generated {len(actionable_items)} actionable items")
-    
-    # 5. Select and explain partner offers
-    print("\n5. Selecting partner offers...")
     max_offers = rec_config.get('content_selection', {}).get('partner_offers_max', 2)
-    partner_offers = select_and_explain_offers(
-        user_id,
-        target_personas,
-        features,
-        persona_context,
-        db_path,
-        max_offers,
-        llm_config
-    )
+    
+    from concurrent.futures import ThreadPoolExecutor
+    
+    def generate_actionable():
+        return generate_actionable_items_for_user(
+            persona_context,
+            features,
+            count=action_count,
+            llm_config=llm_config
+        )
+    
+    def generate_offers():
+        return select_and_explain_offers(
+            user_id,
+            target_personas,
+            features,
+            persona_context,
+            db_path,
+            max_offers,
+            llm_config
+        )
+    
+    # Execute both LLM operations in parallel
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        actionable_future = executor.submit(generate_actionable)
+        offers_future = executor.submit(generate_offers)
+        
+        actionable_items = actionable_future.result()
+        partner_offers = offers_future.result()
+    
+    print(f"   Generated {len(actionable_items)} actionable items")
     print(f"   Selected {len(partner_offers)} eligible offers")
     
     # 6. Assemble complete package
     print("\n6. Assembling recommendation package...")
+    # IMPORTANT: Measure latency BEFORE trace generation (traces are audit-only, not user-facing)
     generation_time = time.time() - start_time
     
     recommendation = {
@@ -347,6 +360,8 @@ def generate_recommendation(
         'llm_model': llm_config.get('model', 'gpt-4o-mini'),
         'generation_latency_seconds': generation_time
     }
+    
+    print(f"✓ Core recommendation generated in {generation_time:.2f}s")
     
     # 7. Store in database
     print("\n7. Storing recommendation...")
@@ -369,8 +384,9 @@ def generate_recommendation(
     except Exception as e:
         print(f"   ⚠ Storage failed: {e}")
     
-    # 8. Generate and store decision traces
-    print("\n8. Generating decision traces...")
+    # 8. Generate and store decision traces (NOT counted in latency - audit-only)
+    print("\n8. Generating decision traces (async audit)...")
+    trace_start = time.time()
     try:
         trace_ids = generate_and_store_traces(
             user_id=user_id,
@@ -379,12 +395,14 @@ def generate_recommendation(
             partner_offers=partner_offers,
             db_path=db_path
         )
-        print(f"   ✓ Stored {len(trace_ids)} decision traces")
+        trace_time = time.time() - trace_start
+        print(f"   ✓ Stored {len(trace_ids)} decision traces ({trace_time:.2f}s)")
     except Exception as e:
         print(f"   ⚠ Trace generation failed: {e}")
     
+    total_time = time.time() - start_time
     print(f"\n{'='*70}")
-    print(f"✓ Recommendation generated in {generation_time:.2f}s")
+    print(f"✓ Recommendation complete: {generation_time:.2f}s (core) + {total_time - generation_time:.2f}s (traces/storage)")
     print(f"{'='*70}\n")
     
     return recommendation
@@ -526,15 +544,14 @@ def select_and_explain_offers(
     if not eligible_offers:
         return []
     
-    # Initialize LLM client
-    llm_client = LLMClient(llm_config)
-    
-    # Extract user context
-    primary_persona_id = target_personas[0]
-    user_context = extract_persona_specific_metrics(features, primary_persona_id)
-    
-    # Generate relevance explanation for each offer
-    for offer in eligible_offers:
+    # OPTIMIZATION: Batch all offer explanations into a single LLM call
+    if len(eligible_offers) == 1:
+        # Single offer - use original approach
+        llm_client = LLMClient(llm_config)
+        primary_persona_id = target_personas[0]
+        user_context = extract_persona_specific_metrics(features, primary_persona_id)
+        
+        offer = eligible_offers[0]
         system_msg, user_prompt = build_offer_relevance_prompt(
             user_context=user_context,
             persona_name=persona_context['primary_persona_name'],
@@ -548,8 +565,63 @@ def select_and_explain_offers(
         if result['success']:
             offer['why_relevant'] = result['text']
         else:
-            # Fallback
             offer['why_relevant'] = f"This {offer['product_type']} may help address your current financial situation."
+    else:
+        # Multiple offers - batch into single call for speed
+        llm_client = LLMClient(llm_config)
+        primary_persona_id = target_personas[0]
+        user_context = extract_persona_specific_metrics(features, primary_persona_id)
+        
+        # Build batch prompt
+        offers_text = "\n\n".join([
+            f"Offer {idx + 1}: {offer['product_name']}\n"
+            f"Description: {offer['short_description']}\n"
+            f"Benefits: {', '.join(offer.get('benefits', []))}"
+            for idx, offer in enumerate(eligible_offers)
+        ])
+        
+        batch_prompt = f"""For each product offer below, write a brief (2-3 sentences) explanation of why it's relevant to this user.
+
+User Profile: {persona_context['primary_persona_name']}
+User Metrics: {json.dumps(user_context, indent=2)}
+
+Product Offers:
+{offers_text}
+
+Return as JSON array with format: [{{"offer_number": 1, "explanation": "text"}}]
+
+Use empowering language, cite specific user metrics when relevant, and focus on how each offer addresses their financial situation."""
+        
+        system_msg = "You are a financial education assistant. Return valid JSON only, with explanations in a supportive, educational tone."
+        
+        result = llm_client.generate(batch_prompt, system_msg, max_tokens=400)
+        
+        if result['success']:
+            try:
+                explanations = json.loads(result['text'])
+                if isinstance(explanations, list):
+                    # Match explanations to offers
+                    for item in explanations:
+                        offer_num = item.get('offer_number', 0) - 1
+                        if 0 <= offer_num < len(eligible_offers):
+                            eligible_offers[offer_num]['why_relevant'] = item.get('explanation', '')
+                    
+                    # Fallback for any missing explanations
+                    for offer in eligible_offers:
+                        if not offer.get('why_relevant'):
+                            offer['why_relevant'] = f"This {offer['product_type']} may help address your current financial situation."
+                else:
+                    # Parsing failed, use fallbacks
+                    for offer in eligible_offers:
+                        offer['why_relevant'] = f"This {offer['product_type']} may help address your current financial situation."
+            except json.JSONDecodeError:
+                # JSON parsing failed, use fallbacks
+                for offer in eligible_offers:
+                    offer['why_relevant'] = f"This {offer['product_type']} may help address your current financial situation."
+        else:
+            # LLM call failed, use fallbacks
+            for offer in eligible_offers:
+                offer['why_relevant'] = f"This {offer['product_type']} may help address your current financial situation."
     
     return eligible_offers
 
