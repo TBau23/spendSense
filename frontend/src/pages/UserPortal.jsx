@@ -114,61 +114,75 @@ const UserPortal = () => {
   // State A: Non-consented
   if (!isConsented) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="max-w-2xl w-full bg-white rounded-lg shadow-xl p-8">
-          {/* Navigation */}
-          <button
-            onClick={() => navigate('/user')}
-            className="text-indigo-600 hover:text-indigo-800 mb-6 flex items-center"
-          >
-            ← Back to User Selection
-          </button>
+      <div className="consent-page">
+        <div className="consent-content-wrapper">
+          <div className="consent-card">
+            {/* Navigation */}
+            <button
+              onClick={() => navigate('/user')}
+              className="back-btn-consent"
+            >
+              ← Back to User Selection
+            </button>
 
-          {/* Content */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              Welcome, {user.name}!
-            </h1>
-            <div className="text-6xl mb-6">🔒</div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              Get Personalized Financial Education
-            </h2>
-            <p className="text-gray-600 mb-6 leading-relaxed">
-              Grant consent to unlock personalized insights and recommendations based on your spending patterns. 
-              We'll analyze your financial behavior and provide educational content tailored just for you.
-            </p>
-            
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8 text-left">
-              <h3 className="font-semibold text-blue-900 mb-3">What you'll get:</h3>
-              <ul className="space-y-2 text-gray-700">
-                <li className="flex items-start">
-                  <span className="text-green-600 mr-2">✓</span>
-                  <span>Personalized spending insights and analysis</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-600 mr-2">✓</span>
-                  <span>Educational content matched to your financial situation</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-600 mr-2">✓</span>
-                  <span>Actionable recommendations reviewed by our team</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-600 mr-2">✓</span>
-                  <span>Relevant product suggestions (no sales pressure)</span>
-                </li>
-              </ul>
+            {/* Content */}
+            <div className="consent-content">
+              <h1 className="consent-welcome-title">
+                Welcome, {user.name}!
+              </h1>
+              
+              {/* Lock Icon with Animation */}
+              <div className="consent-icon-container">
+                <div className="consent-glow"></div>
+                <div className="consent-lock-icon">🔒</div>
+              </div>
+              
+              <h2 className="consent-heading">
+                Get Personalized Financial Education
+              </h2>
+              <p className="consent-description">
+                Grant consent to unlock personalized insights and recommendations based on your spending patterns. 
+                We'll analyze your financial behavior and provide educational content tailored just for you.
+              </p>
+              
+              {/* Benefits Box */}
+              <div className="benefits-box">
+                <h3 className="benefits-title">What you'll get:</h3>
+                <ul className="benefits-list">
+                  <li className="benefit-item">
+                    <span className="benefit-check">✓</span>
+                    <span>Personalized spending insights and analysis</span>
+                  </li>
+                  <li className="benefit-item">
+                    <span className="benefit-check">✓</span>
+                    <span>Educational content matched to your financial situation</span>
+                  </li>
+                  <li className="benefit-item">
+                    <span className="benefit-check">✓</span>
+                    <span>Actionable recommendations reviewed by our team</span>
+                  </li>
+                  <li className="benefit-item">
+                    <span className="benefit-check">✓</span>
+                    <span>Relevant product suggestions (no sales pressure)</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Consent Button */}
+              <div className="consent-button-wrapper">
+                <ConsentToggle
+                  userId={userId}
+                  currentConsent={false}
+                  onConsentChange={handleConsentChange}
+                />
+              </div>
+
+              {/* Privacy Notice */}
+              <p className="privacy-notice">
+                <span className="privacy-icon">🔐</span>
+                You can revoke consent at any time. We respect your privacy and data rights.
+              </p>
             </div>
-
-            <ConsentToggle
-              userId={userId}
-              currentConsent={false}
-              onConsentChange={handleConsentChange}
-            />
-
-            <p className="text-xs text-gray-500 mt-6">
-              You can revoke consent at any time. We respect your privacy and data rights.
-            </p>
           </div>
         </div>
       </div>
@@ -178,49 +192,70 @@ const UserPortal = () => {
   // State B: Consented, no approved recommendations
   if (!hasRecommendations) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="max-w-2xl w-full bg-white rounded-lg shadow-xl p-8">
-          {/* Navigation */}
-          <button
-            onClick={() => navigate('/user')}
-            className="text-indigo-600 hover:text-indigo-800 mb-6 flex items-center"
-          >
-            ← Back to User Selection
-          </button>
-
-          {/* Content */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              Welcome, {user.name}!
-            </h1>
-            <div className="text-6xl mb-6">⏳</div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              Your Recommendations Are Being Prepared
-            </h2>
-            <p className="text-gray-600 mb-6 leading-relaxed">
-              Our team is analyzing your financial data and preparing personalized educational content for you. 
-              This usually takes just a few moments.
-            </p>
-            
-            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-6 mb-8">
-              <p className="text-indigo-900 font-medium">
-                Check back soon or refresh this page to see your recommendations!
-              </p>
-            </div>
-
+      <div className="waiting-page">
+        <div className="waiting-content-wrapper">
+          <div className="waiting-card">
+            {/* Navigation */}
             <button
-              onClick={loadUserData}
-              className="btn btn-primary mb-6"
+              onClick={() => navigate('/user')}
+              className="back-btn-waiting"
             >
-              Refresh Now
+              ← Back to User Selection
             </button>
 
-            <div className="pt-6 border-t border-gray-200">
-              <ConsentToggle
-                userId={userId}
-                currentConsent={true}
-                onConsentChange={handleConsentChange}
-              />
+            {/* Content */}
+            <div className="waiting-content">
+              <h1 className="welcome-title">
+                Welcome, {user.name}!
+              </h1>
+              
+              {/* Animated Icon */}
+              <div className="waiting-animation">
+                <div className="waiting-circle pulse-1"></div>
+                <div className="waiting-circle pulse-2"></div>
+                <div className="waiting-circle pulse-3"></div>
+                <div className="waiting-icon">⏳</div>
+              </div>
+              
+              <h2 className="waiting-heading">
+                Your Recommendations Are Being Prepared
+              </h2>
+              <p className="waiting-description">
+                Our team is analyzing your financial data and preparing personalized educational content for you. 
+                This usually takes just a few moments.
+              </p>
+              
+              {/* Info Box */}
+              <div className="info-box-waiting">
+                <div className="info-box-icon">✨</div>
+                <div className="info-box-content">
+                  <p className="info-box-title">What's happening now?</p>
+                  <ul className="info-box-list">
+                    <li>Analyzing your spending patterns</li>
+                    <li>Identifying personalized insights</li>
+                    <li>Curating educational content</li>
+                    <li>Preparing recommendations for review</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <button
+                onClick={loadUserData}
+                className="refresh-button-modern"
+              >
+                <span className="refresh-icon">🔄</span>
+                Refresh Now
+              </button>
+
+              {/* Consent Management */}
+              <div className="consent-section-waiting">
+                <ConsentToggle
+                  userId={userId}
+                  currentConsent={true}
+                  onConsentChange={handleConsentChange}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -254,10 +289,16 @@ const UserPortal = () => {
 
         {/* Recommendations */}
         <div className="recommendations-section">
-          <h2 className="recommendations-section-title">
-            <span className="recommendations-icon">💡</span>
-            Your Recommendations
-          </h2>
+          <div className="recommendations-header">
+            <h2 className="recommendations-section-title">
+              <span className="recommendations-icon">💡</span>
+              Your Recommendations
+            </h2>
+            <div className="recommendations-disclaimer">
+              <span className="disclaimer-icon">ℹ️</span>
+              This is educational content, not financial advice. Consult a licensed advisor for personalized guidance.
+            </div>
+          </div>
           {recommendations.map((rec) => (
             <RecommendationCard 
               key={rec.recommendation_id} 
@@ -281,10 +322,6 @@ const UserPortal = () => {
           />
         </div>
 
-        {/* Disclaimer */}
-        <div className="disclaimer-text">
-          This is educational content, not financial advice. Consult a licensed advisor for personalized guidance.
-        </div>
       </div>
     </div>
   );

@@ -64,33 +64,58 @@ const ConsentToggle = ({ userId, currentConsent, onConsentChange }) => {
         {/* Revoke Confirmation Modal */}
         {showRevokeConfirm && (
           <div className="modal-overlay" onClick={() => setShowRevokeConfirm(false)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h3 className="text-xl font-bold text-gray-900">Revoke Consent</h3>
+            <div className="revoke-modal" onClick={(e) => e.stopPropagation()}>
+              {/* Warning Icon */}
+              <div className="revoke-modal-icon">
+                <div className="revoke-icon-circle">⚠️</div>
               </div>
-              <div className="modal-body">
-                <p className="text-gray-700 mb-4">
-                  Are you sure you want to revoke consent? This will:
-                </p>
-                <ul className="list-disc list-inside text-gray-700 mb-4 space-y-1">
-                  <li>Remove all your personalized recommendations</li>
-                  <li>Stop processing your financial data</li>
-                  <li>Hide your insights and analysis</li>
-                </ul>
-                <p className="text-sm text-gray-600">
-                  You can grant consent again at any time to resume receiving personalized content.
+              
+              {/* Modal Header */}
+              <div className="revoke-modal-header">
+                <h3 className="revoke-modal-title">Revoke Consent</h3>
+                <p className="revoke-modal-subtitle">
+                  Are you sure you want to revoke consent?
                 </p>
               </div>
-              <div className="modal-footer">
+              
+              {/* Modal Body */}
+              <div className="revoke-modal-body">
+                <p className="revoke-modal-description">This will:</p>
+                <div className="revoke-consequences">
+                  <div className="revoke-consequence-item">
+                    <span className="revoke-consequence-icon">🗑️</span>
+                    <span className="revoke-consequence-text">Remove all your personalized recommendations</span>
+                  </div>
+                  <div className="revoke-consequence-item">
+                    <span className="revoke-consequence-icon">⏸️</span>
+                    <span className="revoke-consequence-text">Stop processing your financial data</span>
+                  </div>
+                  <div className="revoke-consequence-item">
+                    <span className="revoke-consequence-icon">🔒</span>
+                    <span className="revoke-consequence-text">Hide your insights and analysis</span>
+                  </div>
+                </div>
+                
+                {/* Info Notice */}
+                <div className="revoke-modal-notice">
+                  <span className="revoke-notice-icon">ℹ️</span>
+                  <span className="revoke-notice-text">
+                    You can grant consent again at any time to resume receiving personalized content.
+                  </span>
+                </div>
+              </div>
+              
+              {/* Modal Footer */}
+              <div className="revoke-modal-footer">
                 <button
                   onClick={() => setShowRevokeConfirm(false)}
-                  className="btn btn-secondary mr-3"
+                  className="btn-modal-cancel"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleRevoke}
-                  className="btn btn-danger"
+                  className="btn-modal-revoke"
                 >
                   Revoke Consent
                 </button>

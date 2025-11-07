@@ -71,7 +71,7 @@ const UserInsights = ({ insights }) => {
       {/* Top Categories */}
       {insights.top_categories && insights.top_categories.length > 0 && (
         <div className="insights-section">
-          <h3 className="insights-section-title">Spending by Category</h3>
+          <h3 className="insights-section-title">📊 Spending by Category</h3>
           <div className="insights-list">
             {insights.top_categories.slice(0, 5).map((category, index) => {
               const percentage = insights.total_spend > 0

@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Wallet, User, Info } from 'lucide-react';
 import { fetchAllUsers } from '../api/user';
 
 const UserLanding = () => {
@@ -47,59 +48,85 @@ const UserLanding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        <div className="bg-white rounded-lg shadow-xl p-8">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-indigo-600 mb-2">SpendSense</h1>
-            <p className="text-gray-600">Your personalized financial education platform</p>
+    <div className="user-landing-page">
+      <div className="landing-content-wrapper">
+        <div className="landing-card">
+          {/* Header with Logo/Icon */}
+          <div className="landing-header">
+            <div className="logo-container">
+              <div className="logo-icon">
+                <Wallet size={48} strokeWidth={2} />
+              </div>
+              <h1 className="logo-text">SpendSense</h1>
+            </div>
+            <p className="tagline">Your personalized financial education platform</p>
           </div>
 
           {/* User Selection */}
-          <div className="space-y-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="selection-section">
+            <label className="selection-label">
+              <span className="label-icon">
+                <User size={20} strokeWidth={2} />
+              </span>
               Select Your Account
             </label>
             
             {loading ? (
-              <div className="text-center py-8">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                <p className="text-gray-500 mt-2">Loading users...</p>
+              <div className="loading-state">
+                <div className="spinner-modern">
+                  <div className="spinner-ring"></div>
+                  <div className="spinner-ring"></div>
+                  <div className="spinner-ring"></div>
+                </div>
+                <p className="loading-text">Loading accounts...</p>
               </div>
             ) : error ? (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-800 text-sm">{error}</p>
+              <div className="error-state">
+                <div className="error-icon">
+                  <Info size={48} strokeWidth={2} />
+                </div>
+                <p className="error-text">{error}</p>
                 <button
                   onClick={loadUsers}
-                  className="mt-2 text-red-600 hover:text-red-800 font-medium text-sm"
+                  className="retry-button"
                 >
                   Try Again
                 </button>
               </div>
             ) : (
-              <select
-                value={selectedUserId}
-                onChange={handleUserSelect}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
-              >
-                <option value="">Choose your account...</option>
-                {users.map((user) => (
-                  <option key={user.user_id} value={user.user_id}>
-                    {user.name} ({maskUserId(user.user_id)})
-                  </option>
-                ))}
-              </select>
+              <div className="select-wrapper">
+                <select
+                  value={selectedUserId}
+                  onChange={handleUserSelect}
+                  className="account-select"
+                >
+                  <option value="">Choose your account...</option>
+                  {users.map((user) => (
+                    <option key={user.user_id} value={user.user_id}>
+                      {user.name} ({maskUserId(user.user_id)})
+                    </option>
+                  ))}
+                </select>
+                <div className="select-arrow">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M4.427 6.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 6H4.604a.25.25 0 00-.177.427z"/>
+                  </svg>
+                </div>
+              </div>
             )}
           </div>
 
-          {/* Footer */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center">
-              This is educational content, not financial advice.
-              <br />
-              Consult a licensed advisor for personalized guidance.
-            </p>
+          {/* Footer Disclaimer */}
+          <div className="landing-footer">
+            <div className="disclaimer-badge">
+              <span className="disclaimer-icon">ℹ️</span>
+              <div className="disclaimer-content">
+                <p className="disclaimer-title">Educational Content Only</p>
+                <p className="disclaimer-text">
+                  This is educational content, not financial advice. Consult a licensed advisor for personalized guidance.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -150,6 +150,7 @@ const DecisionTrace = ({ traces }) => {
         {expandedPersona180d && renderPersonaTrace(persona180d, 180)}
       </div>
 
+
     </div>
   );
 };
