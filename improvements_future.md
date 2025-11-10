@@ -1,0 +1,1 @@
+- people with two personas arent getting recs if one is stable

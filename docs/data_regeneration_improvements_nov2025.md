@@ -270,3 +270,4 @@ For production use with real data, you would calibrate thresholds and archetype 
 **Generated:** November 7, 2025  
 **Status:** ✅ Ready for Demo
 
+
