@@ -1,8 +1,8 @@
 {
   "data_generation": {
-    "user_count": 75,
+    "user_count": 80,
     "consent_ratio": 0.9,
-    "seed": 42,
+    "seed": 100,
     "date_range_months": 7,
     "archetypes": {
       "high_utilizer": 18,

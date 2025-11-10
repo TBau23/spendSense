@@ -18,16 +18,13 @@ services:
       mountPath: /data
       sizeGB: 1
 
-  # Frontend Static Site
-  - type: static_site
+  # Frontend - deployed as Web Service serving static files
+  - type: web
     name: spendsense-frontend
+    env: node
     buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: frontend/dist
+    startCommand: cd frontend && npx serve -s dist -l 3000
     envVars:
       - key: VITE_API_BASE_URL
         sync: false
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
 

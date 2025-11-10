@@ -139,10 +139,25 @@ def drop_all_tables(conn: sqlite3.Connection) -> None:
     """
     cursor = conn.cursor()
     
+    # Disable foreign key constraints temporarily
+    cursor.execute("PRAGMA foreign_keys = OFF")
+    
+    # Drop all tables (order doesn't matter with FK disabled)
+    cursor.execute("DROP TABLE IF EXISTS decision_traces")
+    cursor.execute("DROP TABLE IF EXISTS recommendation_items")
+    cursor.execute("DROP TABLE IF EXISTS recommendations")
+    cursor.execute("DROP TABLE IF EXISTS generic_templates")
+    cursor.execute("DROP TABLE IF EXISTS partner_offers")
+    cursor.execute("DROP TABLE IF EXISTS content_catalog")
+    cursor.execute("DROP TABLE IF EXISTS persona_assignments")
     cursor.execute("DROP TABLE IF EXISTS liabilities")
     cursor.execute("DROP TABLE IF EXISTS transactions")
     cursor.execute("DROP TABLE IF EXISTS accounts")
     cursor.execute("DROP TABLE IF EXISTS users")
     
+    conn.commit()
+    
+    # Re-enable foreign key constraints
+    cursor.execute("PRAGMA foreign_keys = ON")
     conn.commit()
 

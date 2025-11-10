@@ -95,9 +95,43 @@ def create_database_schema(db_path: str):
     print("\n✅ Database schema created\n")
 
 
+def load_content_catalogs(db_path: str):
+    """Load educational content, partner offers, and templates"""
+    print_header("STEP 3: Loading Content Catalogs")
+    
+    from backend.recommend.content_loader import (
+        load_content_catalog_from_json,
+        load_partner_offers_from_json,
+        load_generic_templates_from_json
+    )
+    
+    print("📚 Loading educational content...")
+    catalog_count = load_content_catalog_from_json(
+        db_path,
+        str(project_root / "backend/recommend/content_catalog.json")
+    )
+    
+    print("🎁 Loading partner offers...")
+    offers_count = load_partner_offers_from_json(
+        db_path,
+        str(project_root / "backend/recommend/partner_offers.json")
+    )
+    
+    print("📝 Loading generic templates...")
+    templates_count = load_generic_templates_from_json(
+        db_path,
+        str(project_root / "backend/recommend/generic_templates.json")
+    )
+    
+    print(f"\n✅ Content catalogs loaded")
+    print(f"   - Educational: {catalog_count} items")
+    print(f"   - Partner offers: {offers_count} items")
+    print(f"   - Templates: {templates_count} items\n")
+
+
 def generate_synthetic_data(num_users: int, seed: int, config_path: str):
     """Generate synthetic user data"""
-    print_header(f"STEP 3: Generating Synthetic Data ({num_users} users)")
+    print_header(f"STEP 4: Generating Synthetic Data ({num_users} users)")
     
     # Update config.json with desired user count and seed
     import json
@@ -118,8 +152,9 @@ def generate_synthetic_data(num_users: int, seed: int, config_path: str):
     from scripts.generate_data import main as generate_data_main
     
     # Temporarily modify sys.argv for the generation script
+    # NOTE: Don't pass --reset since we already created the schema and loaded catalogs
     original_argv = sys.argv
-    sys.argv = ['generate_data.py', '--reset']
+    sys.argv = ['generate_data.py']
     
     try:
         generate_data_main()
@@ -131,7 +166,7 @@ def generate_synthetic_data(num_users: int, seed: int, config_path: str):
 
 def compute_features(skip_validation: bool):
     """Compute all features"""
-    print_header("STEP 4: Computing Features")
+    print_header("STEP 5: Computing Features")
     
     from scripts.compute_features import main as compute_features_main
     
@@ -152,7 +187,7 @@ def compute_features(skip_validation: bool):
 
 def assign_personas():
     """Assign personas for all users"""
-    print_header("STEP 5: Assigning Personas")
+    print_header("STEP 6: Assigning Personas")
     
     from scripts.assign_personas import main as assign_personas_main
     
@@ -286,6 +321,7 @@ def main():
         # Execute pipeline
         wipe_existing_data(db_path, features_dir)
         create_database_schema(db_path)
+        load_content_catalogs(db_path)
         generate_synthetic_data(args.users, args.seed, str(config_path))
         compute_features(args.skip_validation)
         assign_personas()

@@ -192,7 +192,7 @@ def calculate_payroll_dates(
     elif frequency == "monthly":
         base_interval = 30
     else:  # irregular
-        base_interval = 35  # Average, but will vary significantly
+        base_interval = 55  # Average ~55 days to ensure median >45 days for Persona 2
     
     while current <= end_date:
         dates.append(current)

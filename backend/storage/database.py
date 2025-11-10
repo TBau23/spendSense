@@ -101,7 +101,30 @@ def initialize_database(db_path: Optional[str] = None, reset: bool = False) -> s
         if reset:
             drop_all_tables(conn)
         
+        # Create core tables (users, accounts, transactions, liabilities)
         create_tables(conn)
+        
+        # Create Epic 3 tables (persona assignments)
+        try:
+            from ..personas.storage import create_persona_assignments_table
+        except ImportError:
+            from personas.storage import create_persona_assignments_table
+        create_persona_assignments_table(db_path)
+        
+        # Create Epic 4 tables (recommendations, content, offers)
+        try:
+            from ..recommend.storage import create_recommendation_tables
+        except ImportError:
+            from recommend.storage import create_recommendation_tables
+        create_recommendation_tables(db_path)
+        
+        # Create Epic 5 tables (decision traces)
+        try:
+            from .migrations import create_decision_traces_table
+        except ImportError:
+            from storage.migrations import create_decision_traces_table
+        create_decision_traces_table(conn)
+        
         conn.commit()
         print(f"Database initialized at: {db_path}")
         
