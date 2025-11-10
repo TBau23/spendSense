@@ -19,10 +19,8 @@ services:
       sizeGB: 1
 
   # Frontend Static Site
-  - type: web
+  - type: static
     name: spendsense-frontend
-    runtime: static
-    plan: free
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
     envVars:
