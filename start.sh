@@ -42,20 +42,48 @@ if [ ! -f "/data/spendsense.db" ]; then
     echo "Step 1/4: Generating synthetic transaction data..."
     python scripts/generate_data.py
     
+    # Load content catalogs (educational content, partner offers, templates)
+    echo "Step 2/4: Loading content catalogs..."
+    python -c "
+from backend.recommend.content_loader import (
+    load_content_catalog_from_json,
+    load_partner_offers_from_json,
+    load_generic_templates_from_json
+)
+from backend.storage.database import get_db_path
+
+db_path = get_db_path()
+
+catalog_count = load_content_catalog_from_json(
+    db_path,
+    'backend/recommend/content_catalog.json'
+)
+
+offers_count = load_partner_offers_from_json(
+    db_path,
+    'backend/recommend/partner_offers.json'
+)
+
+templates_count = load_generic_templates_from_json(
+    db_path,
+    'backend/recommend/generic_templates.json'
+)
+
+print(f'✓ Loaded {catalog_count} educational items, {offers_count} partner offers, {templates_count} templates')
+"
+    
     # Compute features (deterministic based on transactions)
-    echo "Step 2/4: Computing behavioral features..."
+    echo "Step 3/4: Computing behavioral features..."
     python scripts/compute_features.py
     
     # Assign personas (deterministic based on features)
-    echo "Step 3/4: Assigning user personas..."
+    echo "Step 4/4: Assigning user personas..."
     python scripts/assign_personas.py
-    
-    # Generate recommendations for all users
-    echo "Step 4/4: Generating recommendations..."
-    python scripts/generate_recommendations.py --batch
     
     echo ""
     echo "✓ Demo data initialization complete!"
+    echo ""
+    echo "Note: Use 'Generate New Recommendation' button in UI to create recommendations"
     echo ""
 else
     echo "✓ Database found at /data/spendsense.db"
