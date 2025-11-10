@@ -3,7 +3,7 @@ services:
   - type: web
     name: spendsense-api
     runtime: python
-    plan: free
+    plan: starter
     buildCommand: chmod +x build.sh && ./build.sh
     startCommand: chmod +x start.sh && ./start.sh
     envVars:
