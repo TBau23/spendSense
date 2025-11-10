@@ -4,7 +4,8 @@
  * API functions for end user portal
  */
 
-const API_BASE = 'http://localhost:8000';
+// Get base URL from environment variable or default to localhost
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 /**
  * Fetch all users for dropdown selection
